@@ -1,6 +1,6 @@
-import { migrate } from "../database/migrate"
+import { migrate } from '../database/migrate'
 
 export default defineNitroPlugin(async () => {
-  console.log("Run migrations")
+  console.log('Run migrations')
   await migrate()
 })

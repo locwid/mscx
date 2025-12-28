@@ -1,11 +1,12 @@
-import { Generated, Insertable, Selectable, Updateable } from "kysely"
+import { Insertable, Selectable, Updateable } from 'kysely'
 
 export interface Database {
   tracks: TrackTable
 }
 
 export interface TrackTable {
-  id: Generated<number>
+  id: string
+  name: string
 }
 
 export type Track = Selectable<TrackTable>

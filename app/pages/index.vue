@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-const { data } = useFetch('/api/track')
+const { data } = useFetch('/api/track', { key: 'tracks' })
 </script>
 
 <template>
