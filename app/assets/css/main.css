@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --ui-radius: 0rem;
+}
+
+@layer base {
+  html {
+    @apply h-full overflow-hidden;
+  }
+  body {
+    @apply bg-default/90 overflow-auto;
+  }
+}
