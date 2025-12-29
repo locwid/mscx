@@ -1,5 +1,5 @@
 import fs from 'fs/promises'
-import { createReadStream } from 'fs'
+import { createReadStream, ReadStreamOptions } from 'fs'
 import path from 'path'
 
 const FILES_FOLDER = './_data/files'
@@ -7,7 +7,7 @@ const makeFilePath = (key: string) => path.join(FILES_FOLDER, `${key}.bin`)
 
 class FileService {
   async get(key: string): Promise<string | null> {
-    const exists = await this.isExists(makeFilePath(key))
+    const exists = await this.isExists(key)
     if (!exists) {
       return null
     }
@@ -15,10 +15,12 @@ class FileService {
     return file
   }
 
-  async getStream(key: string) {
-    const exists = await this.isExists(makeFilePath(key))
-    if (!exists) return null
-    return createReadStream(makeFilePath(key))
+  getStream(key: string, options?: ReadStreamOptions) {
+    return createReadStream(makeFilePath(key), options)
+  }
+
+  async getStats(key: string) {
+    return fs.stat(makeFilePath(key))
   }
 
   async save(key: string, file: NodeJS.ArrayBufferView): Promise<void> {
@@ -29,9 +31,9 @@ class FileService {
     await fs.unlink(makeFilePath(key))
   }
 
-  async isExists(path: string): Promise<boolean> {
+  async isExists(key: string): Promise<boolean> {
     try {
-      await fs.access(path, fs.constants.F_OK)
+      await fs.access(makeFilePath(key), fs.constants.F_OK)
       return true
     } catch {
       return false
@@ -39,7 +41,10 @@ class FileService {
   }
 
   async createDirectory(path: string) {
-    const exists = await this.isExists(path)
+    const exists = await fs
+      .access(path, fs.constants.F_OK)
+      .then(() => true)
+      .catch(() => false)
     if (exists) return
     await fs.mkdir(path, { recursive: true })
   }

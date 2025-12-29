@@ -8,12 +8,42 @@ export default defineEventHandler(async (event) => {
       message: 'Invalid id parameter',
     })
   }
-  const stream = await fileService.getStream(id)
-  if (!stream) {
+  const exists = await fileService.isExists(id)
+  if (!exists) {
     throw createError({
       statusCode: 404,
       message: 'File not found',
     })
   }
-  return sendStream(event, stream)
+  const stats = await fileService.getStats(id)
+  const range = getHeader(event, 'range')
+
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-')
+    const start = parseInt(parts[0], 10)
+    const end = parts[1] ? parseInt(parts[1], 10) : stats.size - 1
+
+    if (start >= stats.size || end >= stats.size || start > end) {
+      setHeaders(event, {
+        'content-range': `bytes */${stats.size}`,
+      })
+      setResponseStatus(event, 416)
+      return
+    }
+
+    const chunksize = end - start + 1
+
+    setResponseStatus(event, 206)
+    setHeaders(event, {
+      'content-range': `bytes ${start}-${end}/${stats.size}`,
+      'accept-ranges': 'bytes',
+      'content-length': chunksize,
+    })
+    return sendStream(event, fileService.getStream(id, { start, end }))
+  } else {
+    setHeaders(event, {
+      'content-length': stats.size,
+    })
+    return sendStream(event, fileService.getStream(id))
+  }
 })
