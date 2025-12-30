@@ -1,11 +1,19 @@
+<script lang="ts" setup>
+const tracksSync = useSyncTracks()
+
+onBeforeMount(() => {
+  tracksSync.setup()
+})
+</script>
+
 <template>
   <UApp>
     <div class="max-w-lg h-lvh mx-auto shadow bg-default">
       <div class="p-4 border-b flex justify-between items-center">
         mscx
-        <TracksUpload>
+        <TrackUpload>
           <UButton icon="i-lucide-upload">Upload</UButton>
-        </TracksUpload>
+        </TrackUpload>
       </div>
       <NuxtPage />
     </div>
