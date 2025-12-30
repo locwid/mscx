@@ -1,0 +1,22 @@
+import Dexie, { type Table } from 'dexie'
+
+export interface Track {
+  id: string
+  name: string
+  file?: File
+  createdAt: Date
+  syncStatus: 'synced' | 'created' | 'deleted'
+}
+
+class LocalDB extends Dexie {
+  tracks!: Table<Track>
+
+  constructor() {
+    super('mscx-db')
+    this.version(1).stores({
+      tracks: 'id, name, file, createdAt, syncStatus',
+    })
+  }
+}
+
+export const localDb = new LocalDB()

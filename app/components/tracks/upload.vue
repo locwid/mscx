@@ -12,22 +12,21 @@ const state = reactive<Schema>({
   files: [],
 })
 
+const open = ref(false)
+const { addTrack } = useTracks()
+
 const onSubmit = async (event: FormSubmitEvent<Schema>) => {
-  const formData = new FormData()
-  for (const file of event.data.files) {
-    formData.append('files', file)
-  }
-  try {
-    await $fetch('/api/track', { method: 'POST', body: formData })
-    refreshNuxtData('tracks')
-  } catch (e) {
-    console.error(e)
-  }
+  await addTrack(event.data.files)
+  open.value = false
 }
 </script>
 
 <template>
-  <UDrawer title="Upload tracks" :ui="{ content: 'max-w-lg mx-auto' }">
+  <UDrawer
+    v-model:open="open"
+    title="Upload tracks"
+    :ui="{ content: 'max-w-lg mx-auto' }"
+  >
     <slot />
     <template #body>
       <UForm

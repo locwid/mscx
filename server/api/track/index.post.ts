@@ -1,26 +1,31 @@
-import { nanoid } from 'nanoid'
+import z from 'zod'
 import { db } from '~~/server/database/client'
 import { fileService } from '~~/server/services/file-service'
 
 export default defineEventHandler(async (event) => {
   const formData = await readFormData(event)
-  const entries = formData.getAll('files')
-  const files: File[] = []
-  for (const entry of entries) {
-    if (entry instanceof File) {
-      files.push(entry)
-    }
-  }
-  const payload = files.map((file) => ({
-    id: nanoid(),
-    file,
-    name: file.name,
-  }))
+
+  const { id, name, createdAt, file } = z
+    .object({
+      id: z.string(),
+      name: z.string(),
+      file: z.file(),
+      createdAt: z.iso.datetime(),
+    })
+    .parse({
+      file: formData.get('file'),
+      id: formData.get('id'),
+      name: formData.get('name'),
+      createdAt: formData.get('createdAt'),
+    })
+
   await db
     .insertInto('tracks')
-    .values(payload.map(({ id, name }) => ({ id, name })))
+    .values({
+      id,
+      name,
+      createdAt,
+    })
     .execute()
-  await Promise.all(
-    payload.map(async (p) => fileService.save(p.id, await p.file.bytes())),
-  )
+  await fileService.save(id, await file.bytes())
 })

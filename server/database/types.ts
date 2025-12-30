@@ -1,4 +1,4 @@
-import { Insertable, Selectable, Updateable } from 'kysely'
+import { ColumnType, Insertable, Selectable, Updateable } from 'kysely'
 
 export interface Database {
   tracks: TrackTable
@@ -7,6 +7,7 @@ export interface Database {
 export interface TrackTable {
   id: string
   name: string
+  createdAt: string
 }
 
 export type Track = Selectable<TrackTable>
