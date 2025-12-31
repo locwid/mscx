@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 const { tracks, deleteTrack } = useTracks()
+const { currentTrack } = storeToRefs(useCurrentTrack())
 </script>
 
 <template>
@@ -9,6 +10,7 @@ const { tracks, deleteTrack } = useTracks()
       :key="track.id"
       :track="track"
       @delete="deleteTrack"
+      @click="currentTrack = track"
     />
   </div>
 </template>

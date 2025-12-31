@@ -2,17 +2,14 @@ import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
 import { localDb, type Track } from '~/local-db'
 
+const tracksSource = from(
+  liveQuery(() =>
+    localDb.tracks.where('syncStatus').notEqual('deleted').sortBy('createdAt'),
+  ),
+)
+
 export function useTracks() {
-  const tracks = useObservable<Track[]>(
-    from(
-      liveQuery(() =>
-        localDb.tracks
-          .where('syncStatus')
-          .notEqual('deleted')
-          .sortBy('createdAt'),
-      ),
-    ),
-  )
+  const tracks = useObservable<Track[]>(tracksSource)
   const { trySync } = useSyncTracks()
 
   async function addTrack(files: File[]) {

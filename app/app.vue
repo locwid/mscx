@@ -1,4 +1,5 @@
 <script lang="ts" setup>
+const { currentTrack } = storeToRefs(useCurrentTrack())
 const tracksSync = useSyncTracks()
 
 onBeforeMount(() => {
@@ -17,5 +18,6 @@ onBeforeMount(() => {
       </div>
       <NuxtPage />
     </div>
+    <PlayerFloating v-if="currentTrack" :track="currentTrack" />
   </UApp>
 </template>
