@@ -9,11 +9,16 @@ const audioRef = useTemplateRef('audio')
 const { playing, currentTime, duration } = useMediaControls(audioRef, {
   src: `file/${props.track.id}`,
 })
+useTitle(props.track.name)
+
+onMounted(() => {
+  playing.value = true
+})
 </script>
 
 <template>
   <div
-    class="fixed bottom-0 bg-default max-w-lg w-full left-1/2 -translate-x-1/2 border-t px-2 py-4"
+    class="fixed bottom-0 bg-default max-w-lg w-full left-1/2 -translate-x-1/2 border-t border-accented px-2 py-4"
   >
     <div class="flex gap-2 overflow-hidden">
       <UButton

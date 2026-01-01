@@ -14,7 +14,7 @@ const open = ref(false)
 </script>
 
 <template>
-  <div class="border border-accented flex gap-4 items-center">
+  <div class="border border-accented flex gap-4 items-center rounded-md">
     <div class="truncate h-full p-2" @click="$emit('click', track.id)">
       {{ track.name }}
     </div>

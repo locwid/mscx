@@ -10,7 +10,9 @@ onBeforeMount(() => {
 <template>
   <UApp>
     <div class="max-w-lg h-lvh mx-auto shadow bg-default">
-      <div class="p-4 border-b flex justify-between items-center">
+      <div
+        class="p-4 border-b border-accented flex justify-between items-center"
+      >
         mscx
         <TrackUpload>
           <UButton icon="i-lucide-upload">Upload</UButton>

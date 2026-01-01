@@ -4,7 +4,7 @@ const { currentTrack } = storeToRefs(useCurrentTrack())
 </script>
 
 <template>
-  <div class="flex flex-col gap-2">
+  <div class="flex flex-col gap-2 p-2">
     <TrackListRow
       v-for="track in tracks"
       :key="track.id"

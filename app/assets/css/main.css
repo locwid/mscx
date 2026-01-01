@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --ui-radius: 0rem;
+  --ui-radius: 0.25rem;
 }
 
 @layer base {
