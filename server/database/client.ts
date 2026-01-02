@@ -1,6 +1,11 @@
 import { Database } from './types' // this is the Database interface we defined earlier
 import SQLite from 'better-sqlite3'
-import { Kysely, SqliteDialect } from 'kysely'
+import {
+  CamelCasePlugin,
+  Kysely,
+  ParseJSONResultsPlugin,
+  SqliteDialect,
+} from 'kysely'
 import { fileService } from '../services/file-service'
 
 const dialect = new SqliteDialect({
@@ -15,4 +20,5 @@ const dialect = new SqliteDialect({
 
 export const db = new Kysely<Database>({
   dialect,
+  plugins: [new ParseJSONResultsPlugin(), new CamelCasePlugin()],
 })

@@ -2,14 +2,14 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: [
-    '@nuxt/ui',
-    '@vueuse/nuxt',
-    '@vite-pwa/nuxt',
-    '@pinia/nuxt',
-  ],
+  modules: ['@nuxt/ui', '@vueuse/nuxt', '@vite-pwa/nuxt', '@pinia/nuxt'],
   css: ['~/assets/css/main.css'],
   ssr: false,
+  router: {
+    options: {
+      hashMode: true,
+    },
+  },
   pwa: {
     registerType: 'autoUpdate',
     includeAssets: ['favicon.ico'],

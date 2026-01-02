@@ -15,15 +15,27 @@ export function useTracks() {
   async function addTrack(files: File[]) {
     const now = new Date()
     try {
-      await localDb.tracks.bulkAdd(
-        files.map((file) => ({
-          id: nanoid(),
-          name: file.name,
-          file,
-          createdAt: now,
-          syncStatus: 'created',
-        })),
+      const items = await Promise.all(
+        files.map(async (file) => {
+          const url = URL.createObjectURL(file)
+          const duration = await getAudioDuration(url)
+          URL.revokeObjectURL(url)
+          return {
+            id: nanoid(),
+            name: file.name,
+            file,
+            createdAt: now,
+            metadata: {
+              originalName: file.name,
+              size: file.size,
+              duration,
+              mimeType: file.type,
+            },
+            syncStatus: 'created' as const,
+          }
+        }),
       )
+      await localDb.tracks.bulkAdd(items)
       trySync()
     } catch (e) {
       console.error(e)

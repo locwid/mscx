@@ -28,7 +28,7 @@ class FileService {
   }
 
   async delete(key: string): Promise<void> {
-    await fs.unlink(makeFilePath(key))
+    if (await this.isExists(key)) await fs.unlink(makeFilePath(key))
   }
 
   async isExists(key: string): Promise<boolean> {

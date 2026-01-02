@@ -5,18 +5,27 @@ import { fileService } from '~~/server/services/file-service'
 export default defineEventHandler(async (event) => {
   const formData = await readFormData(event)
 
-  const { id, name, createdAt, file } = z
+  const {
+    payload: { id, name, metadata, createdAt },
+    file,
+  } = z
     .object({
-      id: z.string(),
-      name: z.string(),
+      payload: z.object({
+        id: z.string(),
+        name: z.string(),
+        metadata: z.object({
+          size: z.number(),
+          originalName: z.string(),
+          duration: z.number(),
+          mimeType: z.string(),
+        }),
+        createdAt: z.iso.datetime(),
+      }),
       file: z.file(),
-      createdAt: z.iso.datetime(),
     })
     .parse({
       file: formData.get('file'),
-      id: formData.get('id'),
-      name: formData.get('name'),
-      createdAt: formData.get('createdAt'),
+      payload: JSON.parse(formData.get('payload') as string),
     })
 
   await db
@@ -24,6 +33,7 @@ export default defineEventHandler(async (event) => {
     .values({
       id,
       name,
+      metadata: JSON.stringify(metadata),
       createdAt,
     })
     .execute()

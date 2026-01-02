@@ -34,9 +34,15 @@ export function useSyncTracks() {
       for (const track of tracksToCreate) {
         const formData = new FormData()
         if (!track.file) continue
-        formData.append('id', track.id)
-        formData.append('name', track.name)
-        formData.append('createdAt', track.createdAt.toISOString())
+        formData.append(
+          'payload',
+          JSON.stringify({
+            id: track.id,
+            name: track.name,
+            createdAt: track.createdAt.toISOString(),
+            metadata: track.metadata,
+          }),
+        )
         formData.append('file', track.file)
         await $fetch('/api/track', { method: 'POST', body: formData })
       }
@@ -51,8 +57,8 @@ export function useSyncTracks() {
 
     const actualTracks = await $fetch('/api/track', { method: 'GET' })
     await localDb.transaction('readwrite', ['tracks'], async ({ tracks }) => {
-      await localDb.tracks.clear()
-      await localDb.tracks.bulkPut(
+      await tracks.clear()
+      await tracks.bulkPut(
         actualTracks.map((track) => ({
           ...track,
           createdAt: new Date(track.createdAt),
