@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Track } from '~/local-db'
+import Avatar from 'vue-boring-avatars'
 
 const props = defineProps<{
   track: Track
@@ -21,12 +22,7 @@ onMounted(() => {
     class="fixed bottom-0 bg-default max-w-lg w-full left-1/2 -translate-x-1/2 border-t border-accented px-2 py-4"
   >
     <div class="flex gap-2 overflow-hidden">
-      <UButton
-        variant="subtle"
-        size="xl"
-        :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
-        @click="playing = !playing"
-      />
+      <Avatar :name="track.id" class="grow-0 shrink-0" />
       <figure class="flex flex-col gap-2 overflow-hidden">
         <figcaption class="truncate leading-none">
           {{ track.name }}
@@ -36,6 +32,12 @@ onMounted(() => {
           <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
         </div>
       </figure>
+      <UButton
+        variant="subtle"
+        size="xl"
+        :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
+        @click="playing = !playing"
+      />
     </div>
   </div>
 </template>
