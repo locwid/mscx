@@ -13,7 +13,7 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="border border-accented flex gap-2 items-center rounded-md">
+  <div class="border h-14 border-accented flex gap-2 items-center rounded-md">
     <div
       class="p-2 flex gap-2 overflow-hidden"
       @click="$emit('click', track.id)"

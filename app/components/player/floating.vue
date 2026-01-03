@@ -19,7 +19,7 @@ onMounted(() => {
 
 <template>
   <div
-    class="fixed bottom-0 bg-default max-w-lg w-full left-1/2 -translate-x-1/2 border-t border-accented px-2 py-4"
+    class="fixed bottom-0 h-18 bg-default max-w-lg w-full left-1/2 -translate-x-1/2 border-t border-accented px-2 py-4"
   >
     <div class="flex gap-2 overflow-hidden">
       <Avatar :name="track.id" class="grow-0 shrink-0" />

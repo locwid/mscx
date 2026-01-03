@@ -9,7 +9,7 @@ onBeforeMount(() => {
 
 <template>
   <UApp>
-    <div class="max-w-lg h-lvh overflow-y-auto mx-auto shadow bg-default">
+    <div class="max-w-lg h-lvh overflow-hidden mx-auto shadow bg-default">
       <TheHeader />
       <NuxtPage />
       <PlayerFloating
