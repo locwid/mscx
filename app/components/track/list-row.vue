@@ -10,8 +10,6 @@ defineEmits<{
   (e: 'delete', id: string): void
   (e: 'click', id: string): void
 }>()
-
-const open = ref(false)
 </script>
 
 <template>
@@ -24,36 +22,18 @@ const open = ref(false)
       <div class="flex flex-col">
         <span class="truncate">{{ track.name }}</span>
         <span class="text-muted text-xs">
-          {{ Math.floor(track.metadata.duration / 60) }}:{{
-            Math.round(track.metadata.duration % 60)
-          }}
+          {{ formatDuration(track.metadata.duration) }}
         </span>
       </div>
     </div>
-    <UDrawer
-      v-model:open="open"
-      :title="track.name"
-      :ui="{ content: 'max-w-lg mx-auto' }"
-    >
+    <TrackInfo :track="track">
       <UButton
         color="neutral"
         variant="ghost"
         icon="i-lucide-ellipsis"
-        class="mr-2"
+        class="mr-2 ml-auto"
         @click.prevent
       />
-      <template #body>
-        <div class="flex flex-col gap-2">
-          <UButton
-            leading-icon="i-lucide-trash"
-            color="error"
-            variant="ghost"
-            @click="($emit('delete', track.id), (open = false))"
-          >
-            Delete
-          </UButton>
-        </div>
-      </template>
-    </UDrawer>
+    </TrackInfo>
   </div>
 </template>

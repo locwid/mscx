@@ -9,17 +9,14 @@ onBeforeMount(() => {
 
 <template>
   <UApp>
-    <div class="max-w-lg h-lvh mx-auto shadow bg-default">
-      <div
-        class="p-4 border-b border-accented flex justify-between items-center"
-      >
-        mscx
-        <TrackUpload>
-          <UButton icon="i-lucide-upload">Upload</UButton>
-        </TrackUpload>
-      </div>
+    <div class="max-w-lg h-lvh overflow-y-auto mx-auto shadow bg-default">
+      <TheHeader />
       <NuxtPage />
+      <PlayerFloating
+        v-if="currentTrack"
+        :key="currentTrack.id"
+        :track="currentTrack"
+      />
     </div>
-    <PlayerFloating v-if="currentTrack" :track="currentTrack" />
   </UApp>
 </template>
