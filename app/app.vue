@@ -1,9 +1,10 @@
 <script lang="ts" setup>
-const { currentTrack } = storeToRefs(useCurrentTrack())
-const tracksSync = useSyncTracks()
+const { currentTrack } = storeToRefs(usePlayer())
+const { switchToNextTrack } = usePlayer()
+const { setupTracksSync } = useTracks()
 
 onBeforeMount(() => {
-  tracksSync.setup()
+  setupTracksSync()
 })
 </script>
 
@@ -16,6 +17,7 @@ onBeforeMount(() => {
         v-if="currentTrack"
         :key="currentTrack.id"
         :track="currentTrack"
+        @ended="switchToNextTrack"
       />
     </div>
   </UApp>

@@ -10,6 +10,11 @@ export default defineNuxtConfig({
       hashMode: true,
     },
   },
+  app: {
+    head: {
+      title: 'mscx',
+    },
+  },
   pwa: {
     registerType: 'autoUpdate',
     includeAssets: ['favicon.ico'],

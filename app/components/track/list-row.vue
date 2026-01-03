@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Track } from '~/local-db'
+import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
 
 defineProps<{

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Track } from '~/local-db'
+import type { Track } from '~/dexie.storage'
 
 defineProps<{
   track: Track

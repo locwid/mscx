@@ -9,7 +9,7 @@ export interface Track {
   syncStatus: 'synced' | 'created' | 'deleted'
 }
 
-class LocalDB extends Dexie {
+class DexieStorage extends Dexie {
   tracks!: Table<Track>
 
   constructor() {
@@ -20,4 +20,4 @@ class LocalDB extends Dexie {
   }
 }
 
-export const localDb = new LocalDB()
+export const dexieStorage = new DexieStorage()

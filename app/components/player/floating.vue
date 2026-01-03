@@ -1,16 +1,24 @@
 <script lang="ts" setup>
-import type { Track } from '~/local-db'
+import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
+
+const emit = defineEmits<{
+  (e: 'ended'): void
+}>()
 
 const props = defineProps<{
   track: Track
 }>()
 
 const audioRef = useTemplateRef('audio')
-const { playing, currentTime, duration } = useMediaControls(audioRef, {
+const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
   src: `file/${props.track.id}`,
 })
 useTitle(props.track.name)
+
+watch(ended, () => {
+  emit('ended')
+})
 
 onMounted(() => {
   playing.value = true
@@ -19,15 +27,17 @@ onMounted(() => {
 
 <template>
   <div
-    class="fixed bottom-0 h-18 bg-muted flex gap-2 justify-between overflow-hidden max-w-lg w-full left-1/2 -translate-x-1/2 px-2 py-4"
+    class="fixed bottom-0 h-18 bg-muted flex justify-between overflow-hidden max-w-lg w-full left-1/2 -translate-x-1/2 px-2 py-4"
   >
     <Avatar :name="track.id" class="grow-0 shrink-0" />
-    <div class="flex flex-col justify-between gap-2 grow overflow-hidden">
+    <div
+      class="flex flex-col justify-between px-2 pb-2 h-full gap-2 grow overflow-hidden"
+    >
       <div class="truncate leading-none">
         {{ track.name }}
       </div>
-      <div class="mb-1">
-        <audio ref="audio" />
+      <div>
+        <audio ref="audio" preload="none" />
         <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
       </div>
     </div>

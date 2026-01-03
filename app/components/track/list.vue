@@ -1,8 +1,9 @@
 <script lang="ts" setup>
 import { useVirtualList } from '@vueuse/core'
 
-const { tracks, deleteTrack } = useTracks()
-const { currentTrack } = storeToRefs(useCurrentTrack())
+const { currentTrack } = storeToRefs(usePlayer())
+const { tracks } = storeToRefs(useTracks())
+const { deleteTrack } = useTracks()
 
 const { list, containerProps, wrapperProps } = useVirtualList(
   computed(() => tracks.value ?? []),
