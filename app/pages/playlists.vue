@@ -1,9 +1,9 @@
 <script lang="ts" setup>
 definePageMeta({
-  title: 'tracks',
+  title: 'playlists',
 })
 </script>
 
 <template>
-  <TrackList />
+  <div class="p-2">Playlists here</div>
 </template>

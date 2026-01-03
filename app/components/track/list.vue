@@ -18,10 +18,10 @@ const height = computed(
 
 <template>
   <div v-bind="containerProps" :style="{ height }">
-    <div v-bind="wrapperProps" class="space-y-2 p-2">
+    <div v-bind="wrapperProps" class="space-y-2 p-2 mb-2">
       <TrackListRow
         v-for="item in list"
-        :key="item.index"
+        :key="item.data.id"
         :track="item.data"
         @delete="deleteTrack"
         @click="currentTrack = item.data"

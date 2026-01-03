@@ -19,8 +19,8 @@ defineEmits<{
       @click="$emit('click', track.id)"
     >
       <Avatar :name="track.id" class="grow-0 shrink-0" />
-      <div class="flex flex-col">
-        <span class="truncate">{{ track.name }}</span>
+      <div class="flex flex-col gap-1">
+        <span class="truncate leading-none">{{ track.name }}</span>
         <span class="text-muted text-xs">
           {{ formatDuration(track.metadata.duration) }}
         </span>

@@ -19,25 +19,23 @@ onMounted(() => {
 
 <template>
   <div
-    class="fixed bottom-0 h-18 bg-default max-w-lg w-full left-1/2 -translate-x-1/2 border-t border-accented px-2 py-4"
+    class="fixed bottom-0 h-18 bg-muted flex gap-2 justify-between overflow-hidden max-w-lg w-full left-1/2 -translate-x-1/2 px-2 py-4"
   >
-    <div class="flex gap-2 overflow-hidden">
-      <Avatar :name="track.id" class="grow-0 shrink-0" />
-      <figure class="flex flex-col gap-2 overflow-hidden">
-        <figcaption class="truncate leading-none">
-          {{ track.name }}
-        </figcaption>
-        <div>
-          <audio ref="audio" />
-          <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
-        </div>
-      </figure>
-      <UButton
-        variant="subtle"
-        size="xl"
-        :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
-        @click="playing = !playing"
-      />
+    <Avatar :name="track.id" class="grow-0 shrink-0" />
+    <div class="flex flex-col justify-between gap-2 grow overflow-hidden">
+      <div class="truncate leading-none">
+        {{ track.name }}
+      </div>
+      <div class="mb-1">
+        <audio ref="audio" />
+        <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
+      </div>
     </div>
+    <UButton
+      variant="subtle"
+      size="xl"
+      :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
+      @click="playing = !playing"
+    />
   </div>
 </template>
