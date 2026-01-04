@@ -4,14 +4,18 @@ const { switchToNextTrack } = usePlayer()
 
 const { setupTracksSync } = useTracks()
 const { setupPlaylistsSync } = usePlaylists()
+const { $pwa } = useNuxtApp()
 
 onBeforeMount(() => {
   setupTracksSync()
   setupPlaylistsSync()
+  console.log($pwa)
 })
 </script>
 
 <template>
+  <NuxtPwaManifest />
+  <NuxtPwaAssets />
   <UApp>
     <div class="max-w-lg h-lvh overflow-hidden mx-auto shadow bg-default">
       <TheHeader />
