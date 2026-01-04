@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 const { currentTrack } = storeToRefs(usePlayer())
 const { switchToNextTrack } = usePlayer()
+
 const { setupTracksSync } = useTracks()
+const { setupPlaylistsSync } = usePlaylists()
 
 onBeforeMount(() => {
   setupTracksSync()
+  setupPlaylistsSync()
 })
 </script>
 

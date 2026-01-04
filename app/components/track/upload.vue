@@ -24,7 +24,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 <template>
   <UDrawer
     v-model:open="open"
-    title="Upload tracks"
+    title="upload tracks"
     :ui="{ content: 'max-w-lg mx-auto' }"
   >
     <slot />
@@ -35,18 +35,18 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
         :schema="schema"
         @submit="onSubmit"
       >
-        <UFormField label="Files" name="files">
+        <UFormField label="files" name="files">
           <UFileUpload
             v-model="state.files"
             multiple
             layout="list"
             class="w-full min-h-48"
-            label="Select images to upload"
+            label="select images to upload"
             accept="audio/*"
           />
         </UFormField>
         <div>
-          <UButton block size="xl" type="submit">Upload</UButton>
+          <UButton block size="xl" type="submit">upload</UButton>
         </div>
       </UForm>
     </template>

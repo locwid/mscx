@@ -14,22 +14,7 @@ export const useTracks = defineStore('tracks', () => {
     ),
   )
 
-  const debouncedSync = useDebounceFn(syncWithServer, 1000)
-
-  async function trySync(immediate = false) {
-    if (navigator.onLine) {
-      if (immediate) {
-        syncWithServer()
-      } else {
-        debouncedSync()
-      }
-    }
-  }
-
-  async function setupTracksSync() {
-    trySync(true)
-    window.addEventListener('online', () => trySync())
-  }
+  const sync = useServerSync(syncWithServer)
 
   async function addTrack(files: File[]) {
     const now = new Date()
@@ -55,7 +40,7 @@ export const useTracks = defineStore('tracks', () => {
         }),
       )
       await dexieStorage.tracks.bulkAdd(items)
-      trySync()
+      sync.trySync()
     } catch (e) {
       console.error(e)
     }
@@ -63,12 +48,12 @@ export const useTracks = defineStore('tracks', () => {
 
   async function deleteTrack(id: string) {
     await dexieStorage.tracks.update(id, { syncStatus: 'deleted' })
-    trySync()
+    sync.trySync()
   }
 
   return {
     tracks,
-    setupTracksSync,
+    setupTracksSync: sync.setupSync,
     addTrack,
     deleteTrack,
   }

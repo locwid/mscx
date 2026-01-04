@@ -26,7 +26,7 @@ defineEmits<{
         </span>
       </div>
     </div>
-    <TrackInfo :track="track">
+    <TrackInfo :track="track" @delete="$emit('delete', track.id)">
       <UButton
         color="neutral"
         variant="ghost"

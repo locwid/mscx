@@ -9,13 +9,21 @@ export interface Track {
   syncStatus: 'synced' | 'created' | 'deleted'
 }
 
+export interface Playlist {
+  id: string
+  name: string
+  syncStatus: 'synced' | 'created' | 'deleted'
+}
+
 class DexieStorage extends Dexie {
   tracks!: Table<Track>
+  playlists!: Table<Playlist>
 
   constructor() {
     super('mscx-db')
     this.version(1).stores({
       tracks: 'id, name, file, metadata, createdAt, syncStatus',
+      playlists: 'id, name, syncStatus',
     })
   }
 }

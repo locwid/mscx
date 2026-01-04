@@ -18,10 +18,17 @@ const title = computed(() => route.meta.title)
     </span>
     <div class="flex gap-2">
       <TrackUpload>
-        <UButton icon="i-lucide-upload" />
+        <UButton icon="i-lucide-upload" variant="outline" />
       </TrackUpload>
+      <PlaylistCreate>
+        <UButton icon="i-lucide-book-plus" variant="outline" />
+      </PlaylistCreate>
       <TheSidebar>
-        <UButton icon="i-lucide-panel-right" color="neutral" />
+        <UButton
+          icon="i-lucide-panel-right"
+          variant="outline"
+          color="neutral"
+        />
       </TheSidebar>
     </div>
   </div>

@@ -5,5 +5,5 @@ definePageMeta({
 </script>
 
 <template>
-  <div class="p-2">Playlists here</div>
+  <PlaylistList />
 </template>
