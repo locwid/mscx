@@ -32,10 +32,17 @@ export default defineNuxtConfig({
       ],
     },
   },
+  vite: {
+    logLevel: 'info',
+  },
+  nitro: {
+    minify: true,
+    prerender: {
+      routes: ['/'],
+    },
+  },
   pwa: {
-    strategies: 'injectManifest',
-    srcDir: 'sw',
-    filename: 'main.ts',
+    strategies: 'generateSW',
     registerType: 'autoUpdate',
     pwaAssets: {
       config: false,
@@ -45,21 +52,15 @@ export default defineNuxtConfig({
     manifest: {
       name: 'mscx',
       short_name: 'mscx',
-      theme_color: '#ffffff',
+      theme_color: '#000000',
       scope: '/',
       display: 'standalone',
       id: '/',
       orientation: 'portrait',
     },
     workbox: {
-      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-    },
-    injectManifest: {
-      globPatterns: ['**/*.{js,css,html,png,svg,ico}'],
-    },
-    client: {
-      installPrompt: true,
-      periodicSyncForUpdates: 20,
+      navigateFallback: '/',
+      navigateFallbackAllowlist: [/^\//],
     },
     devOptions: {
       enabled: true,

@@ -7,11 +7,12 @@ import {
   SqliteDialect,
 } from 'kysely'
 import { fileService } from '../services/file-service'
+import { withDataFolder } from '../config'
 
 const dialect = new SqliteDialect({
   database: async () => {
-    await fileService.createDirectory('./_data')
-    const client = new SQLite('./_data/data.db')
+    await fileService.createDirectory(withDataFolder())
+    const client = new SQLite(withDataFolder('/data.db'))
     client.pragma('journal_mode = WAL')
     client.pragma('foreign_keys = ON')
     return client

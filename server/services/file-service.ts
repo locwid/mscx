@@ -1,9 +1,8 @@
 import fs from 'fs/promises'
 import { createReadStream, ReadStreamOptions } from 'fs'
-import path from 'path'
+import { withDataFolder } from '../config'
 
-const FILES_FOLDER = './_data/files'
-const makeFilePath = (key: string) => path.join(FILES_FOLDER, `${key}.bin`)
+const makeFilePath = (key: string) => withDataFolder('/files', `${key}.bin`)
 
 class FileService {
   async get(key: string): Promise<string | null> {
