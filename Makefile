@@ -21,6 +21,7 @@ package: build-nuxt build-go
 	cp app dist/
 	mkdir -p dist/web
 	cp -r web/dist/* dist/web
+	rm -rf web/dist web/.output app
 
 dev: dev-nuxt dev-go
 
