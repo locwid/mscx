@@ -79,13 +79,15 @@ async function syncWithServer() {
         duration: track.duration,
         type: track.type,
         createdAt: track.createdAt,
-        file: track.file
+        file: track.file,
       })
     }
   }
 
   if (tracksToDelete.length) {
-    await Promise.all([...tracksToDelete.map((track) => apiDeleteTrack(track.id))])
+    await Promise.all([
+      ...tracksToDelete.map((track) => apiDeleteTrack(track.id)),
+    ])
   }
 
   const actualTracks = await apiGetTracks()

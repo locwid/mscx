@@ -40,8 +40,8 @@ export default defineNuxtConfig({
           target: `http://localhost:${process.env.SERVER_PORT ?? '3000'}`,
           changeOrigin: true,
         },
-      }
-    }
+      },
+    },
   },
   nitro: {
     minify: true,
@@ -53,8 +53,14 @@ export default defineNuxtConfig({
   icon: {
     provider: 'none',
     clientBundle: {
-      scan: true
-    }
+      scan: {
+        globInclude: [
+          'app/components/**/*.vue',
+          'app/pages/**/*.vue',
+          'app/app.config.ts',
+        ],
+      },
+    },
   },
   pwa: {
     strategies: 'generateSW',

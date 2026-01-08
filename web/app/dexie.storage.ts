@@ -26,7 +26,8 @@ class DexieStorage extends Dexie {
   constructor() {
     super('mscx-db')
     this.version(1).stores({
-      tracks: 'id, name, file, filename, size, duration, type, createdAt, syncStatus',
+      tracks:
+        'id, name, file, filename, size, duration, type, createdAt, syncStatus',
       playlists: 'id, name, createdAt, syncStatus',
     })
   }

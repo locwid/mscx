@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
-import { getFileUrl } from '~/api/actions';
+import { getFileUrl } from '~/api/actions'
 
 const emit = defineEmits<{
   (e: 'ended'): void

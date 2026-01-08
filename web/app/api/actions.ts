@@ -1,11 +1,24 @@
-import { apiFetch } from "./fetch"
-import type { CreatePlaylistPayload, CreateTrackPayload, PlaylistResponse, TrackResponse } from "./types"
+import { apiFetch } from './fetch'
+import type {
+  CreatePlaylistPayload,
+  CreateTrackPayload,
+  PlaylistResponse,
+  TrackResponse,
+} from './types'
 
 export const apiGetTracks = () => {
   return apiFetch<TrackResponse[]>('/track', { method: 'GET' })
 }
 
-export const apiCreateTrack = ({ id, name, file, type, size, duration, createdAt }: CreateTrackPayload) => {
+export const apiCreateTrack = ({
+  id,
+  name,
+  file,
+  type,
+  size,
+  duration,
+  createdAt,
+}: CreateTrackPayload) => {
   const formData = new FormData()
   formData.set('id', id)
   formData.set('name', name)
@@ -26,7 +39,10 @@ export const apiGetPlaylists = () => {
 }
 
 export const apiCreatePlaylist = (payload: CreatePlaylistPayload) => {
-  return apiFetch<PlaylistResponse[]>('/playlist', { method: 'POST', body: payload })
+  return apiFetch<PlaylistResponse[]>('/playlist', {
+    method: 'POST',
+    body: payload,
+  })
 }
 
 export const apiDeletePlaylist = (id: string) => {

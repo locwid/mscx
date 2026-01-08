@@ -1,6 +1,10 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
-import { apiCreatePlaylist, apiDeletePlaylist, apiGetPlaylists } from '~/api/actions'
+import {
+  apiCreatePlaylist,
+  apiDeletePlaylist,
+  apiGetPlaylists,
+} from '~/api/actions'
 import { dexieStorage } from '~/dexie.storage'
 
 export const usePlaylists = defineStore('playlists', () => {
@@ -50,7 +54,15 @@ async function syncWithServer() {
     .equals('created')
     .toArray()
   if (created.length) {
-    await Promise.all(created.map(item => apiCreatePlaylist({ id: item.id, name: item.name, createdAt: item.createdAt.toISOString() })))
+    await Promise.all(
+      created.map((item) =>
+        apiCreatePlaylist({
+          id: item.id,
+          name: item.name,
+          createdAt: item.createdAt.toISOString(),
+        }),
+      ),
+    )
   }
 
   const deleted = await dexieStorage.playlists
@@ -58,7 +70,7 @@ async function syncWithServer() {
     .equals('deleted')
     .toArray()
   if (deleted.length) {
-    await Promise.all(deleted.map(item => apiDeletePlaylist(item.id)))
+    await Promise.all(deleted.map((item) => apiDeletePlaylist(item.id)))
   }
 
   const actualPlaylists = await apiGetPlaylists()
