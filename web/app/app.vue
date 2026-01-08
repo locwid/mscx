@@ -12,7 +12,6 @@ onBeforeMount(() => {
 </script>
 
 <template>
-  <NuxtPwaManifest />
   <NuxtPwaAssets />
   <UApp>
     <div class="max-w-lg h-lvh overflow-hidden mx-auto shadow bg-default">

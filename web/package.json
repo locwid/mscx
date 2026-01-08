@@ -27,6 +27,7 @@
     "zod": "^4.2.1"
   },
   "devDependencies": {
+    "@iconify-json/lucide": "^1.2.83",
     "@types/better-sqlite3": "^7.6.13",
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vueuse/core": "^14.1.0",

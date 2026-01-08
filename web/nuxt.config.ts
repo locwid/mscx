@@ -45,9 +45,16 @@ export default defineNuxtConfig({
   },
   nitro: {
     minify: true,
+    preset: 'static',
     prerender: {
       routes: ['/'],
     },
+  },
+  icon: {
+    provider: 'none',
+    clientBundle: {
+      scan: true
+    }
   },
   pwa: {
     strategies: 'generateSW',
@@ -69,6 +76,7 @@ export default defineNuxtConfig({
     workbox: {
       navigateFallback: '/',
       navigateFallbackAllowlist: [/^\//],
+      globPatterns: ['**/*.{js,css,html,png,svg,ico,woff}'],
     },
     devOptions: {
       enabled: true,
