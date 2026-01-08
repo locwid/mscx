@@ -15,7 +15,6 @@ build-go:
 	go mod tidy
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o app cmd/server/main.go
 
-package: env GOOS=linux GOARCH=amd64
 package: build-nuxt build-go
 	rm -rf dist
 	mkdir -p dist
@@ -32,4 +31,4 @@ dev-go:
 	PORT=$(PORT) DATA_FOLDER=$(DATA_FOLDER) go run cmd/server/main.go
 
 clean:
-	rm -rf dist app web/node_modules web/.output web/dist
+	rm -rf dist app web/node_modules web/.output web/dist web/.nuxt
