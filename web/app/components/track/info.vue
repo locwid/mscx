@@ -22,9 +22,9 @@ const open = ref(false)
     <template #body>
       <div class="flex flex-col gap-2">
         <div class="text-sm text-muted flex gap-4">
-          <span>duration: {{ formatDuration(track.metadata.duration) }}</span>
+          <span>duration: {{ formatDuration(track.duration) }}</span>
           <span class="text-sm text-muted">
-            size: {{ formatFileSize(track.metadata.size) }}
+            size: {{ formatFileSize(track.size) }}
           </span>
         </div>
         <UButton

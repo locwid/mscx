@@ -5,11 +5,14 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/labstack/echo/v4"
+	"github.com/locwid/mscx/internal/config"
 	"github.com/locwid/mscx/internal/database/models"
 	"github.com/locwid/mscx/internal/dto"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type TrackController interface {
@@ -33,36 +36,38 @@ func (t trackController) Create(c echo.Context) error {
 		return echo.ErrBadRequest
 	}
 	if err := c.Validate(payload); err != nil {
-		return echo.ErrUnprocessableEntity
+		c.Logger().Error(err)
+		return err
 	}
+	ext := filepath.Ext(payload.File.Filename)
 
 	track := models.Track{
-		ID: payload.ID,
-		Name: payload.Name,
-		File: payload.File.Filename,
-		Size: payload.Size,
-		Duration: payload.Duration,
-		Type: payload.Type,
+		ID:        payload.ID,
+		Name:      payload.Name,
+		File:      strings.Join([]string{payload.ID, ext}, ""),
+		Size:      payload.Size,
+		Duration:  payload.Duration,
+		Type:      payload.Type,
 		CreatedAt: payload.CreatedAt,
 	}
-	err := gorm.G[models.Track](t.db).Create(c.Request().Context(), &track)
-	if err != nil {
-		return echo.ErrInternalServerError
-	}
+
+	t.db.Clauses(clause.OnConflict{
+		UpdateAll: true,
+	}).Create(&track)
 
 	src, err := payload.File.Open()
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 	defer src.Close()
 
-	dst, err := os.Create(filepath.Join("./files", track.File))
+	dst, err := os.Create(config.GetFilePath(track.File))
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	if _, err = io.Copy(dst, src); err != nil {
-		return err
+		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
 
 	return c.JSON(http.StatusOK, track)
@@ -78,7 +83,7 @@ func (t trackController) Delete(c echo.Context) error {
 	ctx := c.Request().Context()
 	track, err := gorm.G[models.Track](t.db).Where("id = ?", id).First(ctx)
 	if err != nil {
-		return echo.ErrInternalServerError
+		return c.NoContent(http.StatusOK)
 	}
 
 	_, err = gorm.G[models.Track](t.db).Where("id = ?", id).Delete(ctx)
@@ -86,7 +91,7 @@ func (t trackController) Delete(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	err = os.Remove(filepath.Join(filepath.Join("./files", track.File)))
+	err = os.Remove(config.GetFilePath(track.File))
 	if err != nil {
 		return echo.ErrInternalServerError
 	}

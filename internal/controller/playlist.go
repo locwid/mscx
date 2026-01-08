@@ -31,7 +31,7 @@ func (p playlistController) Create(c echo.Context) error {
 	}
 
 	playlist := models.Playlist{
-		ID: payload.ID,
+		ID:   payload.ID,
 		Name: payload.Name,
 	}
 	err := gorm.G[models.Playlist](p.db).Create(c.Request().Context(), &playlist)

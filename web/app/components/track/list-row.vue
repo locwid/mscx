@@ -22,7 +22,7 @@ defineEmits<{
       <div class="flex flex-col gap-1">
         <span class="truncate leading-none">{{ track.name }}</span>
         <span class="text-muted text-xs">
-          {{ formatDuration(track.metadata.duration) }}
+          {{ formatDuration(track.duration) }}
         </span>
       </div>
     </div>

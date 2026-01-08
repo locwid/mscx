@@ -1,5 +1,6 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
+import { apiCreateTrack, apiDeleteTrack, apiGetTracks } from '~/api/actions'
 import { dexieStorage, type Track } from '~/dexie.storage'
 
 export const useTracks = defineStore('tracks', () => {
@@ -27,16 +28,13 @@ export const useTracks = defineStore('tracks', () => {
           return {
             id: nanoid(),
             name: file.name,
+            duration: Math.round(duration),
+            size: file.size,
+            type: file.type,
             file,
             createdAt: now,
-            metadata: {
-              originalName: file.name,
-              size: file.size,
-              duration,
-              mimeType: file.type,
-            },
             syncStatus: 'created' as const,
-          }
+          } satisfies Track
         }),
       )
       await dexieStorage.tracks.bulkAdd(items)
@@ -73,30 +71,24 @@ async function syncWithServer() {
 
   if (tracksToCreate.length) {
     for (const track of tracksToCreate) {
-      const formData = new FormData()
       if (!track.file) continue
-      formData.append(
-        'payload',
-        JSON.stringify({
-          id: track.id,
-          name: track.name,
-          createdAt: track.createdAt.toISOString(),
-          metadata: track.metadata,
-        }),
-      )
-      formData.append('file', track.file)
-      await $fetch('/api/track', { method: 'POST', body: formData })
+      await apiCreateTrack({
+        id: track.id,
+        name: track.name,
+        size: track.size,
+        duration: track.duration,
+        type: track.type,
+        createdAt: track.createdAt,
+        file: track.file
+      })
     }
   }
 
   if (tracksToDelete.length) {
-    await $fetch('/api/track', {
-      method: 'DELETE',
-      body: { ids: tracksToDelete.map((track) => track.id) },
-    })
+    await Promise.all([...tracksToDelete.map((track) => apiDeleteTrack(track.id))])
   }
 
-  const actualTracks = await $fetch('/api/track', { method: 'GET' })
+  const actualTracks = await apiGetTracks()
   await dexieStorage.transaction(
     'readwrite',
     ['tracks'],
@@ -104,7 +96,12 @@ async function syncWithServer() {
       await tracks.clear()
       await tracks.bulkPut(
         actualTracks.map((track) => ({
-          ...track,
+          id: track.id,
+          name: track.name,
+          size: track.size,
+          type: track.type,
+          duration: track.duration,
+          filename: track.file,
           createdAt: new Date(track.createdAt),
           syncStatus: 'synced',
         })),

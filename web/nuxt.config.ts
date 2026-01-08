@@ -34,6 +34,14 @@ export default defineNuxtConfig({
   },
   vite: {
     logLevel: 'info',
+    server: {
+      proxy: {
+        '/api': {
+          target: `http://localhost:${process.env.SERVER_PORT ?? '3000'}`,
+          changeOrigin: true,
+        },
+      }
+    }
   },
   nitro: {
     minify: true,

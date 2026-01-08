@@ -1,5 +1,6 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
+import { apiCreatePlaylist, apiDeletePlaylist, apiGetPlaylists } from '~/api/actions'
 import { dexieStorage } from '~/dexie.storage'
 
 export const usePlaylists = defineStore('playlists', () => {
@@ -21,6 +22,7 @@ export const usePlaylists = defineStore('playlists', () => {
       await dexieStorage.playlists.add({
         id: nanoid(),
         name,
+        createdAt: new Date(),
         syncStatus: 'created',
       })
       sync.trySync()
@@ -48,9 +50,7 @@ async function syncWithServer() {
     .equals('created')
     .toArray()
   if (created.length) {
-    for (const item of created) {
-      await $fetch('/api/playlist', { method: 'POST', body: item })
-    }
+    await Promise.all(created.map(item => apiCreatePlaylist({ id: item.id, name: item.name, createdAt: item.createdAt.toISOString() })))
   }
 
   const deleted = await dexieStorage.playlists
@@ -58,13 +58,10 @@ async function syncWithServer() {
     .equals('deleted')
     .toArray()
   if (deleted.length) {
-    await $fetch('/api/playlist', {
-      method: 'DELETE',
-      body: { ids: deleted.map((d) => d.id) },
-    })
+    await Promise.all(deleted.map(item => apiDeletePlaylist(item.id)))
   }
 
-  const actualPlaylists = await $fetch('/api/playlist', { method: 'GET' })
+  const actualPlaylists = await apiGetPlaylists()
   await dexieStorage.transaction(
     'readwrite',
     ['playlists'],
@@ -72,7 +69,9 @@ async function syncWithServer() {
       await playlists.clear()
       await playlists.bulkPut(
         actualPlaylists.map((playlist) => ({
-          ...playlist,
+          id: playlist.id,
+          name: playlist.name,
+          createdAt: new Date(playlist.createdAt),
           syncStatus: 'synced',
         })),
       )

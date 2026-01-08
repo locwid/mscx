@@ -6,11 +6,11 @@ import (
 	"gorm.io/gorm"
 )
 
-func InitDatabase() *gorm.DB {
-	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+func InitDatabase(dbName string) *gorm.DB {
+	db, err := gorm.Open(sqlite.Open(dbName), &gorm.Config{})
 	if err != nil {
-    panic("failed to connect database")
-  }
+		panic("failed to connect database")
+	}
 	db.AutoMigrate(&models.Track{}, &models.Playlist{})
 	return db
 }

@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
+import { getFileUrl } from '~/api/actions';
 
 const emit = defineEmits<{
   (e: 'ended'): void
@@ -10,9 +11,20 @@ const props = defineProps<{
   track: Track
 }>()
 
+const fileSrc = computed(() => {
+  if (props.track.filename) {
+    return getFileUrl(props.track.filename)
+  }
+  if (props.track.file) {
+    const url = URL.createObjectURL(props.track.file)
+    return url
+  }
+  throw new Error('One of file or filename must exists')
+})
+
 const audioRef = useTemplateRef('audio')
 const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
-  src: `file/${props.track.id}`,
+  src: fileSrc,
 })
 useTitle(props.track.name)
 
