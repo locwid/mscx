@@ -12,14 +12,10 @@ const props = defineProps<{
 }>()
 
 const fileSrc = computed(() => {
-  if (props.track.filename) {
-    return getFileUrl(props.track.filename)
-  }
   if (props.track.file) {
-    const url = URL.createObjectURL(props.track.file)
-    return url
+    return URL.createObjectURL(props.track.file)
   }
-  throw new Error('One of file or filename must exists')
+  return getFileUrl(props.track.id)
 })
 
 const audioRef = useTemplateRef('audio')
@@ -49,7 +45,7 @@ onMounted(() => {
         {{ track.name }}
       </div>
       <div>
-        <audio ref="audio" preload="none" />
+        <audio ref="audio" preload="metadata" />
         <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
       </div>
     </div>

@@ -21,8 +21,9 @@ defineEmits<{
       <Avatar :name="track.id" class="grow-0 shrink-0" />
       <div class="flex flex-col gap-1">
         <span class="truncate leading-none">{{ track.name }}</span>
-        <span class="text-muted text-xs">
-          {{ formatDuration(track.duration) }}
+        <span class="text-muted text-xs inline-flex gap-2">
+          <span>{{ formatDuration(track.duration) }}</span>
+          <span v-if="track.keepFile">saved</span>
         </span>
       </div>
     </div>

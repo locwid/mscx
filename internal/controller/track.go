@@ -1,11 +1,10 @@
 package controller
 
 import (
+	"errors"
 	"io"
 	"net/http"
 	"os"
-	"path/filepath"
-	"strings"
 
 	"github.com/labstack/echo/v4"
 	"github.com/locwid/mscx/internal/config"
@@ -19,6 +18,7 @@ type TrackController interface {
 	Create(c echo.Context) error
 	GetList(c echo.Context) error
 	Delete(c echo.Context) error
+	GetFile(c echo.Context) error
 }
 
 type trackController struct {
@@ -27,6 +27,25 @@ type trackController struct {
 
 func MakeTrackController(db *gorm.DB) TrackController {
 	return trackController{db}
+}
+
+// GetFile implements [TrackController].
+func (t trackController) GetFile(c echo.Context) error {
+	var id string
+	err := echo.PathParamsBinder(c).String("id", &id).BindError()
+	if err != nil {
+		return echo.ErrBadRequest
+	}
+
+	track, err := gorm.G[models.Track](t.db).Where("id = ?", id).First(c.Request().Context())
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.ErrNotFound
+		}
+		return echo.ErrInternalServerError
+	}
+
+	return c.File(config.GetFilePath(track.GetFilename()))
 }
 
 // Create implements [TrackController].
@@ -39,12 +58,10 @@ func (t trackController) Create(c echo.Context) error {
 		c.Logger().Error(err)
 		return err
 	}
-	ext := filepath.Ext(payload.File.Filename)
 
 	track := models.Track{
 		ID:        payload.ID,
 		Name:      payload.Name,
-		File:      strings.Join([]string{payload.ID, ext}, ""),
 		Size:      payload.Size,
 		Duration:  payload.Duration,
 		Type:      payload.Type,
@@ -61,7 +78,7 @@ func (t trackController) Create(c echo.Context) error {
 	}
 	defer src.Close()
 
-	dst, err := os.Create(config.GetFilePath(track.File))
+	dst, err := os.Create(config.GetFilePath(track.GetFilename()))
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err)
 	}
@@ -91,7 +108,7 @@ func (t trackController) Delete(c echo.Context) error {
 		return echo.ErrInternalServerError
 	}
 
-	err = os.Remove(config.GetFilePath(track.File))
+	err = os.Remove(config.GetFilePath(track.GetFilename()))
 	if err != nil {
 		return echo.ErrInternalServerError
 	}

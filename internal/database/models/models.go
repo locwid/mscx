@@ -1,15 +1,23 @@
 package models
 
-import "time"
+import (
+	"path/filepath"
+	"strings"
+	"time"
+)
 
 type Track struct {
 	ID        string    `json:"id" gorm:"primaryKey"`
 	Name      string    `json:"name"`
-	File      string    `json:"file"`
 	Size      uint      `json:"size"`
 	Duration  uint      `json:"duration"`
 	Type      string    `json:"type"`
 	CreatedAt time.Time `json:"createdAt"`
+}
+
+func (t Track) GetFilename() string {
+	ext := filepath.Ext(t.Name)
+	return strings.Join([]string{t.ID, ext}, "")
 }
 
 type Playlist struct {

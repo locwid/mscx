@@ -1,6 +1,8 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
 
+const { downloadTrack, unloadTrack } = useTracks()
+
 defineEmits<{
   (e: 'delete'): void
 }>()
@@ -26,11 +28,35 @@ const open = ref(false)
           <span class="text-sm text-muted">
             size: {{ formatFileSize(track.size) }}
           </span>
+          <span v-if="track.keepFile" class="text-sm text-muted">
+            saved
+          </span>
         </div>
+        <UButton
+          v-if="track.keepFile"
+          leading-icon="i-lucide-delete"
+          color="neutral"
+          variant="ghost"
+          size="xl"
+          @click="(unloadTrack(track.id), (open = false))"
+        >
+          remove file
+        </UButton>
+        <UButton
+          v-else
+          leading-icon="i-lucide-download"
+          color="neutral"
+          variant="ghost"
+          size="xl"
+          @click="(downloadTrack(track.id), (open = false))"
+        >
+          save file
+        </UButton>
         <UButton
           leading-icon="i-lucide-trash"
           color="error"
           variant="ghost"
+          size="xl"
           @click="($emit('delete'), (open = false))"
         >
           delete

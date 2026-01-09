@@ -1,6 +1,6 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
-import { apiCreateTrack, apiDeleteTrack, apiGetTracks } from '~/api/actions'
+import { apiCreateTrack, apiDeleteTrack, apiGetFile, apiGetTracks } from '~/api/actions'
 import { dexieStorage, type Track } from '~/dexie.storage'
 
 export const useTracks = defineStore('tracks', () => {
@@ -49,11 +49,22 @@ export const useTracks = defineStore('tracks', () => {
     sync.trySync()
   }
 
+  async function downloadTrack(id: string) {
+    const file = await apiGetFile(id)
+    await dexieStorage.tracks.update(id, { file, keepFile: true })
+  }
+
+  async function unloadTrack(id: string) {
+    await dexieStorage.tracks.update(id, { file: undefined, keepFile: false })
+  }
+
   return {
     tracks,
     setupTracksSync: sync.setupSync,
     addTrack,
     deleteTrack,
+    downloadTrack,
+    unloadTrack
   }
 })
 
@@ -88,6 +99,7 @@ async function syncWithServer() {
     await Promise.all([
       ...tracksToDelete.map((track) => apiDeleteTrack(track.id)),
     ])
+    await dexieStorage.tracks.bulkDelete(tracksToDelete.map(t => t.id))
   }
 
   const actualTracks = await apiGetTracks()
@@ -95,19 +107,17 @@ async function syncWithServer() {
     'readwrite',
     ['tracks'],
     async ({ tracks }) => {
-      await tracks.clear()
-      await tracks.bulkPut(
-        actualTracks.map((track) => ({
-          id: track.id,
+      await Promise.all(actualTracks.map((track) => {
+        return tracks.upsert(track.id, {
           name: track.name,
           size: track.size,
           type: track.type,
           duration: track.duration,
-          filename: track.file,
           createdAt: new Date(track.createdAt),
           syncStatus: 'synced',
-        })),
-      )
+        })
+      }))
+      await tracks.filter(t => !t.keepFile).modify({ file: undefined })
     },
   )
 }

@@ -28,13 +28,13 @@ func main() {
 	}))
 
 	api := e.Group("/api")
-	api.Static("/file", config.GetFilesDir())
 
 	trackController := controller.MakeTrackController(db)
 	track := api.Group("/track")
 	track.GET("", trackController.GetList)
 	track.POST("", trackController.Create)
 	track.DELETE("/:id", trackController.Delete)
+	track.GET("/:id/file", trackController.GetFile)
 
 	playlistController := controller.MakePlaylistContoller(db)
 	playlist := api.Group("/playlist")

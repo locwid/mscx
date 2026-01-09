@@ -3,8 +3,8 @@ import Dexie, { type Table } from 'dexie'
 export interface Track {
   id: string
   name: string
-  filename?: string
   file?: File
+  keepFile?: boolean
   size: number
   duration: number
   type: string
@@ -27,7 +27,7 @@ class DexieStorage extends Dexie {
     super('mscx-db')
     this.version(1).stores({
       tracks:
-        'id, name, file, filename, size, duration, type, createdAt, syncStatus',
+        'id, name, file, keepFile, size, duration, type, createdAt, syncStatus',
       playlists: 'id, name, createdAt, syncStatus',
     })
   }

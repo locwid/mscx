@@ -49,4 +49,13 @@ export const apiDeletePlaylist = (id: string) => {
   return apiFetch(`/playlist/${id}`, { method: 'DELETE' })
 }
 
-export const getFileUrl = (filename: string) => `/api/file/${filename}`
+export const getFileUrl = (id: string) => `/api/track/${id}/file`
+
+export const apiGetFile = async (filename: string) => {
+  const response = await apiFetch.raw<ReadableStream>(getFileUrl(filename), {
+    method: 'GET',
+    responseType: 'stream',
+  })
+  const blob = await response.blob()
+  return new File([blob], filename, { type: response.headers.get('Content-Type') ?? '' })
+}
