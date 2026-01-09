@@ -57,5 +57,7 @@ export const apiGetFile = async (filename: string) => {
     responseType: 'stream',
   })
   const blob = await response.blob()
-  return new File([blob], filename, { type: response.headers.get('Content-Type') ?? '' })
+  return new File([blob], filename, {
+    type: response.headers.get('Content-Type') ?? '',
+  })
 }

@@ -28,9 +28,7 @@ const open = ref(false)
           <span class="text-sm text-muted">
             size: {{ formatFileSize(track.size) }}
           </span>
-          <span v-if="track.keepFile" class="text-sm text-muted">
-            saved
-          </span>
+          <span v-if="track.keepFile" class="text-sm text-muted"> saved </span>
         </div>
         <UButton
           v-if="track.keepFile"
