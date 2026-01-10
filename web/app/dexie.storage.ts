@@ -22,6 +22,7 @@ export interface Playlist {
 export interface PlaylistTracks {
   playlistId: string
   trackId: string
+  syncStatus: 'synced' | 'created' | 'deleted'
 }
 
 class DexieStorage extends Dexie {
@@ -35,7 +36,7 @@ class DexieStorage extends Dexie {
       tracks:
         'id, name, file, keepFile, size, duration, type, createdAt, syncStatus',
       playlists: 'id, name, createdAt, syncStatus',
-      playlistTracks: '[playlistId+trackId]',
+      playlistTracks: '[playlistId+trackId], syncStatus',
     })
   }
 }

@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { useVirtualList } from '@vueuse/core'
-import type { Track } from '~/dexie.storage';
+import type { Track } from '~/dexie.storage'
 
 const { tracks = [] } = defineProps<{
   tracks?: Track[]

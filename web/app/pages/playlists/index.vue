@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-useHeaderTitle("playlists")
+useHeaderTitle('playlists')
 </script>
 
 <template>

@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-useHeaderTitle("tracks")
+useHeaderTitle('tracks')
 
 const { tracks } = storeToRefs(useTracks())
 </script>

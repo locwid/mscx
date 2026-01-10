@@ -1,7 +1,7 @@
 export const useAppStore = defineStore('app', () => {
-  const headerTitle = ref("")
+  const headerTitle = ref('')
 
   return {
-    headerTitle
+    headerTitle,
   }
 })

@@ -25,12 +25,12 @@ const value = ref([])
       <UCheckboxGroup v-model="value" :items="items" size="xl" variant="card" />
     </template>
     <template #footer="{ close }">
-      <UButton size="xl" color="neutral" variant="subtle" block @click="close"
-        >cancel</UButton
-      >
-      <UButton size="xl" block @click="$emit('confirm', value)"
-        >confirm</UButton
-      >
+      <UButton size="xl" color="neutral" variant="subtle" block @click="close">
+        cancel
+      </UButton>
+      <UButton size="xl" block @click="(close(), $emit('confirm', value))">
+        confirm
+      </UButton>
     </template>
   </USlideover>
 </template>
