@@ -1,8 +1,6 @@
 <script lang="ts" setup>
-const route = useRoute()
-
 const online = useOnline()
-const title = computed(() => route.meta.title)
+const { headerTitle } = storeToRefs(useAppStore())
 </script>
 
 <template>
@@ -13,7 +11,7 @@ const title = computed(() => route.meta.title)
       <UChip standalone inset :color="online ? 'success' : 'warning'" />
       <span class="text-lg leading-none">
         <NuxtLink to="/">mscx</NuxtLink> /
-        <span class="text-muted"> {{ title }}</span>
+        <span class="text-muted"> {{ headerTitle }}</span>
       </span>
     </span>
     <div class="flex gap-2">

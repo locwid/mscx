@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-definePageMeta({
-  title: 'playlists',
-})
+useHeaderTitle("playlists")
 </script>
 
 <template>

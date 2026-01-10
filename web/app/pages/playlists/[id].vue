@@ -5,6 +5,10 @@ import { dexieStorage, type Track } from '~/dexie.storage';
 const route = useRoute()
 const playlistId = computed(() => route.params.id as string)
 
+const playlist = computedAsync(() => dexieStorage.playlists.get(playlistId.value))
+const name = computed(() => playlist.value?.name ?? '')
+useHeaderTitle(() => name.value)
+
 const tracks = useObservable(
   from(
     liveQuery(

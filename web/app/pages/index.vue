@@ -1,7 +1,5 @@
 <script lang="ts" setup>
-definePageMeta({
-  title: 'tracks',
-})
+useHeaderTitle("tracks")
 
 const { tracks } = storeToRefs(useTracks())
 </script>
