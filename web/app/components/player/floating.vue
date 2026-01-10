@@ -24,12 +24,8 @@ const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
 })
 useTitle(props.track.name)
 
-watch(ended, () => {
-  emit('ended')
-})
-
-onMounted(() => {
-  playing.value = true
+watch(ended, (value) => {
+  if (value) emit('ended')
 })
 </script>
 
@@ -37,18 +33,23 @@ onMounted(() => {
   <div
     class="fixed bottom-0 h-18 bg-muted flex justify-between overflow-hidden max-w-lg w-full left-1/2 -translate-x-1/2 px-2 py-4"
   >
-    <Avatar :name="track.id" class="grow-0 shrink-0" />
-    <div
-      class="flex flex-col justify-between px-2 pb-2 h-full gap-2 grow overflow-hidden"
-    >
-      <div class="truncate leading-none">
-        {{ track.name }}
+    <Transition name="fade" mode="out-in">
+      <Avatar :key="track.id" :name="track.id" class="grow-0 shrink-0" />
+    </Transition>
+    <Transition name="fade" mode="out-in">
+      <div
+        class="flex flex-col justify-between px-2 pb-2 h-full gap-2 grow overflow-hidden"
+        :key="track.id"
+      >
+        <div class="truncate leading-none">
+          {{ track.name }}
+        </div>
+        <div>
+          <audio ref="audio" preload="metadata" autoplay />
+          <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
+        </div>
       </div>
-      <div>
-        <audio ref="audio" preload="metadata" />
-        <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
-      </div>
-    </div>
+    </Transition>
     <UButton
       variant="subtle"
       size="xl"

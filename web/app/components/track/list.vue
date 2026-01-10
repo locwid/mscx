@@ -28,6 +28,7 @@ const height = computed(
         :key="item.data.id"
         :track="item.data"
         @click="currentTrack = item.data"
+        :active="currentTrack?.id === item.data.id"
       />
     </div>
   </div>

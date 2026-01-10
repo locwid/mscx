@@ -9,17 +9,20 @@ const { headerTitle } = storeToRefs(useAppStore())
   >
     <span class="inline-flex items-center gap-2">
       <UChip standalone inset :color="online ? 'success' : 'warning'" />
-      <span class="text-lg leading-none">
-        <NuxtLink to="/">mscx</NuxtLink> /
-        <span class="text-muted"> {{ headerTitle }}</span>
+      <span class="text-lg leading-none relative">
+        <NuxtLink to="/">mscx</NuxtLink>&nbsp;/&nbsp;<Transition
+          name="slide-up"
+        >
+          <span class="text-muted" :key="headerTitle">{{ headerTitle }}</span>
+        </Transition>
       </span>
     </span>
     <div class="flex gap-2">
       <TrackUpload>
-        <UButton icon="i-lucide-upload" variant="outline" />
+        <UButton icon="i-lucide-upload" variant="outline" color="neutral" />
       </TrackUpload>
       <PlaylistCreate>
-        <UButton icon="i-lucide-book-plus" variant="outline" />
+        <UButton icon="i-lucide-book-plus" variant="outline" color="neutral" />
       </PlaylistCreate>
       <TheSidebar>
         <UButton
@@ -31,3 +34,21 @@ const { headerTitle } = storeToRefs(useAppStore())
     </div>
   </div>
 </template>
+
+<style lang="css" scoped>
+.slide-up-enter-active,
+.slide-up-leave-active {
+  position: absolute;
+  transition: all 0.25s ease-out;
+}
+
+.slide-up-enter-from {
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(-30px);
+}
+</style>

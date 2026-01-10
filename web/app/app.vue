@@ -17,12 +17,28 @@ onBeforeMount(() => {
     <div class="max-w-lg h-lvh overflow-hidden mx-auto shadow bg-default">
       <TheHeader />
       <NuxtPage />
-      <PlayerFloating
-        v-if="currentTrack"
-        :key="currentTrack.id"
-        :track="currentTrack"
-        @ended="switchToNextTrack"
-      />
+      <Transition name="slide-up">
+        <PlayerFloating
+          v-if="currentTrack"
+          :track="currentTrack"
+          @ended="switchToNextTrack"
+        />
+      </Transition>
     </div>
   </UApp>
 </template>
+
+<style lang="css">
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease-out;
+}
+
+.slide-up-enter-from {
+  transform: translateY(100%);
+}
+
+.slide-up-leave-to {
+  transform: translateY(100%);
+}
+</style>

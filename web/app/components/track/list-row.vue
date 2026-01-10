@@ -4,6 +4,7 @@ import Avatar from 'vue-boring-avatars'
 
 defineProps<{
   track: Track
+  active?: boolean
 }>()
 
 defineEmits<{
@@ -13,7 +14,10 @@ defineEmits<{
 </script>
 
 <template>
-  <div class="border h-14 border-accented flex gap-2 items-center rounded-md">
+  <div
+    class="border bg-muted h-14 border-accented flex gap-2 items-center rounded-md transition-all"
+    :class="{ 'border-primary-500': active }"
+  >
     <div
       class="p-2 flex gap-2 overflow-hidden"
       @click="$emit('click', track.id)"

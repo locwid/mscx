@@ -33,5 +33,8 @@ const navigation: NavigationMenuItem[] = [
     <template #body>
       <UNavigationMenu orientation="vertical" :items="navigation" />
     </template>
+    <template #footer>
+      <UColorModeSwitch size="xl" />
+    </template>
   </USlideover>
 </template>

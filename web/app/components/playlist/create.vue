@@ -25,7 +25,6 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
   <UDrawer
     v-model:open="open"
     title="new playlist"
-    :ui="{ content: 'max-w-lg mx-auto' }"
   >
     <slot />
     <template #body>

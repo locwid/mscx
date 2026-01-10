@@ -15,7 +15,6 @@ const open = ref(false)
   <UDrawer
     v-model:open="open"
     :title="track.name"
-    :ui="{ content: 'max-w-lg mx-auto' }"
   >
     <slot />
     <template #body>

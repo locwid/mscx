@@ -25,7 +25,6 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
   <UDrawer
     v-model:open="open"
     title="upload tracks"
-    :ui="{ content: 'max-w-lg mx-auto' }"
   >
     <slot />
     <template #body>

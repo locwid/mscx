@@ -4,6 +4,12 @@ export default defineAppConfig({
       primary: 'orange',
       neutral: 'neutral',
     },
+    drawer: {
+      slots: {
+        content: 'max-w-lg mx-auto',
+        body: 'pb-4',
+      }
+    },
     icons: {
       arrowDown: 'i-lucide-arrow-down',
       arrowLeft: 'i-lucide-arrow-left',
