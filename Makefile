@@ -1,5 +1,10 @@
 GOOS ?= linux
 GOARCH ?= amd64
+ifeq ($(shell uname -s),Darwin)
+	CC = x86_64-unknown-linux-gnu-gcc
+else
+	CC = gcc
+endif
 
 PORT ?= 4000
 DATA_FOLDER ?= _data
@@ -13,7 +18,7 @@ build-nuxt:
 
 build-go:
 	go mod tidy
-	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=1 CC=x86_64-unknown-linux-gnu-gcc go build -o app cmd/server/main.go
+	GOOS=$(GOOS) GOARCH=$(GOARCH) CGO_ENABLED=1 CC=$(CC) go build -o app cmd/server/main.go
 
 package: build-nuxt build-go
 	rm -rf dist
