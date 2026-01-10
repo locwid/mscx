@@ -40,10 +40,15 @@ export const usePlaylists = defineStore('playlists', () => {
     sync.trySync()
   }
 
+  async function addTrackToPlaylist(playlistId: string, trackId: string) {
+    await dexieStorage.playlistTracks.add({ playlistId, trackId })
+  }
+
   return {
     playlists,
     addPlaylist,
     deletePlaylist,
+    addTrackToPlaylist,
     setupPlaylistsSync: sync.setupSync,
   }
 })

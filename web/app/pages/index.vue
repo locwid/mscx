@@ -2,8 +2,10 @@
 definePageMeta({
   title: 'tracks',
 })
+
+const { tracks } = storeToRefs(useTracks())
 </script>
 
 <template>
-  <TrackList />
+  <TrackList :tracks="tracks" />
 </template>

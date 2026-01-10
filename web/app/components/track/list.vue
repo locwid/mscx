@@ -1,12 +1,15 @@
 <script lang="ts" setup>
 import { useVirtualList } from '@vueuse/core'
+import type { Track } from '~/dexie.storage';
+
+const { tracks = [] } = defineProps<{
+  tracks?: Track[]
+}>()
 
 const { currentTrack } = storeToRefs(usePlayer())
-const { tracks } = storeToRefs(useTracks())
-const { deleteTrack } = useTracks()
 
 const { list, containerProps, wrapperProps } = useVirtualList(
-  computed(() => tracks.value ?? []),
+  computed(() => tracks),
   {
     itemHeight: 56 + 8,
   },
@@ -24,7 +27,6 @@ const height = computed(
         v-for="item in list"
         :key="item.data.id"
         :track="item.data"
-        @delete="deleteTrack"
         @click="currentTrack = item.data"
       />
     </div>

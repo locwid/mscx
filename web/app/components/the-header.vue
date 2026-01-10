@@ -12,7 +12,7 @@ const title = computed(() => route.meta.title)
     <span class="inline-flex items-center gap-2">
       <UChip standalone inset :color="online ? 'success' : 'warning'" />
       <span class="text-lg leading-none">
-        mscx /
+        <NuxtLink to="/">mscx</NuxtLink> /
         <span class="text-muted"> {{ title }}</span>
       </span>
     </span>

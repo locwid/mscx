@@ -1,11 +1,8 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
 
-const { downloadTrack, unloadTrack } = useTracks()
-
-defineEmits<{
-  (e: 'delete'): void
-}>()
+const { downloadTrack, unloadTrack, deleteTrack } = useTracks()
+const { addTrackToPlaylist } = usePlaylists()
 
 defineProps<{
   track: Track
@@ -30,6 +27,25 @@ const open = ref(false)
           </span>
           <span v-if="track.keepFile" class="text-sm text-muted"> saved </span>
         </div>
+        <PlaylistPicker
+          @confirm="
+            (idList) => {
+              idList.forEach((playlistId) =>
+                addTrackToPlaylist(playlistId, track.id),
+              )
+              open = false
+            }
+          "
+        >
+          <UButton
+            leading-icon="i-lucide-plus"
+            color="neutral"
+            variant="ghost"
+            size="xl"
+          >
+            add to playlist
+          </UButton>
+        </PlaylistPicker>
         <UButton
           v-if="track.keepFile"
           leading-icon="i-lucide-delete"
@@ -55,7 +71,7 @@ const open = ref(false)
           color="error"
           variant="ghost"
           size="xl"
-          @click="($emit('delete'), (open = false))"
+          @click="(deleteTrack(track.id), (open = false))"
         >
           delete
         </UButton>
