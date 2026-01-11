@@ -24,5 +24,5 @@ type Playlist struct {
 	ID        string    `json:"id" gorm:"primaryKey"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
-	Tracks    []*Track  `gorm:"many2many:playlist_tracks;"`
+	Tracks    []*Track  `json:"tracks" gorm:"many2many:playlist_tracks;"`
 }

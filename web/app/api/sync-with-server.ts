@@ -1,17 +1,15 @@
-import { dexieStorage, type Change } from '~/dexie.storage'
+import { dexieStorage } from '~/dexie.storage'
 import {
+  apiAddTrackToPlaylist,
   apiCreatePlaylist,
   apiCreateTrack,
   apiDeletePlaylist,
   apiDeleteTrack,
+  apiDeleteTrackFromPlaylist,
   apiGetPlaylists,
   apiGetTracks,
 } from './actions'
-
-export async function pushChange(change: Change) {
-  await dexieStorage.changes.where('id').equals(change.id).delete()
-  await dexieStorage.changes.add(change)
-}
+import { nanoid } from 'nanoid'
 
 export async function trySyncWithServer() {
   if (navigator.onLine) {
@@ -19,98 +17,133 @@ export async function trySyncWithServer() {
   }
 }
 
-dexieStorage.changes.hook('creating', debounce(trySyncWithServer, 500))
-
 async function syncWithServer() {
-  const changes = await dexieStorage.changes.toArray()
-  for (const change of changes) {
-    switch (change.entity) {
-      case 'track':
-        await syncTrack(change)
-        break
-      case 'playlist':
-        await syncPlaylist(change)
-        break
-      case 'playlistTrack':
-        break
+  await syncPlaylistTracks()
+  await syncTracks()
+  await syncPlaylists()
+  await Promise.all([freshTracks(), freshPlaylists()])
+}
+
+async function syncTracks() {
+  const created = await dexieStorage.tracks
+    .where('sync')
+    .equals('created')
+    .toArray()
+  for (const track of created) {
+    if (track.file) {
+      await apiCreateTrack({
+        id: track.id,
+        name: track.name,
+        size: track.size,
+        duration: track.duration,
+        type: track.type,
+        createdAt: track.createdAt,
+        file: track.file,
+      })
     }
   }
-  await Promise.all([
-    freshTracks(),
-    freshPlaylists(),
-    dexieStorage.changes.clear(),
-  ])
-}
 
-async function syncTrack(change: Change) {
-  switch (change.type) {
-    case 'created':
-      const track = await dexieStorage.tracks.get(change.id)
-      if (track && track.file) {
-        await apiCreateTrack({
-          id: track.id,
-          name: track.name,
-          size: track.size,
-          duration: track.duration,
-          type: track.type,
-          createdAt: track.createdAt,
-          file: track.file,
-        })
-      }
-      break
-    case 'deleted':
-      await apiDeleteTrack(change.id)
-      break
+  const deleted = await dexieStorage.tracks
+    .where('sync')
+    .equals('deleted')
+    .toArray()
+  for (const track of deleted) {
+    await apiDeleteTrack(track.id)
   }
 }
 
-async function syncPlaylist(change: Change) {
-  switch (change.type) {
-    case 'created':
-      const playlist = await dexieStorage.playlists.get(change.id)
-      if (playlist) {
-        await apiCreatePlaylist({
-          id: playlist.id,
-          name: playlist.name,
-          createdAt: playlist.createdAt.toISOString(),
-        })
-      }
-      break
-    case 'deleted':
-      await apiDeletePlaylist(change.id)
-      break
+async function syncPlaylists() {
+  const created = await dexieStorage.playlists
+    .where('sync')
+    .equals('created')
+    .toArray()
+  for (const playlist of created) {
+    await apiCreatePlaylist({
+      id: playlist.id,
+      name: playlist.name,
+      createdAt: playlist.createdAt.toISOString(),
+    })
+  }
+
+  const deleted = await dexieStorage.playlists
+    .where('sync')
+    .equals('deleted')
+    .toArray()
+  for (const playlist of deleted) {
+    await apiDeletePlaylist(playlist.id)
+  }
+}
+
+async function syncPlaylistTracks() {
+  const created = await dexieStorage.playlistTracks
+    .where('sync')
+    .equals('created')
+    .toArray()
+  for (const pair of created) {
+    await apiAddTrackToPlaylist(pair.playlistId, pair.trackId)
+  }
+
+  const deleted = await dexieStorage.playlistTracks
+    .where('sync')
+    .equals('deleted')
+    .toArray()
+  for (const pair of deleted) {
+    await apiDeleteTrackFromPlaylist(pair.playlistId, pair.trackId)
   }
 }
 
 async function freshTracks() {
   const items = await apiGetTracks()
-  await dexieStorage.transaction(
-    'readwrite',
-    ['tracks'],
-    async ({ tracks }) => {
-      await Promise.all(
-        items.map((track) => {
-          return tracks.upsert(track.id, {
-            name: track.name,
-            size: track.size,
-            type: track.type,
-            duration: track.duration,
-            createdAt: new Date(track.createdAt),
-          })
-        }),
-      )
-      await tracks.filter((t) => !t.keepFile).modify({ file: undefined })
-    },
-  )
+  await dexieStorage.transaction('rw', ['tracks'], async ({ tracks }) => {
+    const withFiles = await tracks.filter(obj => !!obj.keepFile).toArray()
+    await tracks.clear()
+    await tracks.bulkAdd(
+      items.map(track => {
+        const prev = withFiles.find(item => item.id === track.id)
+        return {
+          id: track.id,
+          name: track.name,
+          keepFile: prev?.keepFile,
+          file: prev?.file,
+          size: track.size,
+          type: track.type,
+          duration: track.duration,
+          sync: 'none',
+          createdAt: new Date(track.createdAt),
+        }
+      })
+    )
+  })
 }
 
 async function freshPlaylists() {
   const items = await apiGetPlaylists()
-  await dexieStorage.playlists.bulkPut(
-    items.map((playlist) => ({
-      id: playlist.id,
-      name: playlist.name,
-      createdAt: new Date(playlist.createdAt),
-    })),
+  const rels = items.flatMap((item) =>
+    item.tracks.map((t) => ({ playlistId: item.id, trackId: t.id })),
+  )
+  await dexieStorage.transaction(
+    'rw',
+    ['playlists', 'playlistTracks'],
+    async ({ playlists, playlistTracks }) => {
+      await playlists.clear()
+      await playlistTracks.clear()
+      await playlists.bulkAdd(
+        items.map((playlist) => ({
+          id: playlist.id,
+          name: playlist.name,
+          sync: 'none',
+          createdAt: new Date(playlist.createdAt),
+        })),
+      )
+      await playlistTracks.bulkAdd(
+        rels.map(rel => ({
+          id: nanoid(),
+          playlistId: rel.playlistId,
+          trackId: rel.trackId,
+          createdAt: new Date(),
+          sync: 'none'
+        }))
+      )
+    },
   )
 }

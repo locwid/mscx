@@ -49,6 +49,21 @@ export const apiDeletePlaylist = (id: string) => {
   return apiFetch(`/playlist/${id}`, { method: 'DELETE' })
 }
 
+export const apiAddTrackToPlaylist = (playlistId: string, trackId: string) => {
+  return apiFetch(`/playlist/${playlistId}/track/${trackId}`, {
+    method: 'POST',
+  })
+}
+
+export const apiDeleteTrackFromPlaylist = (
+  playlistId: string,
+  trackId: string,
+) => {
+  return apiFetch(`/playlist/${playlistId}/track/${trackId}`, {
+    method: 'DELETE',
+  })
+}
+
 export const getFileUrl = (id: string) => `/api/track/${id}/file`
 
 export const apiGetFile = async (filename: string) => {

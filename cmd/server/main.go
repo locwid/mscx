@@ -41,6 +41,8 @@ func main() {
 	playlist.GET("", playlistController.GetList)
 	playlist.POST("", playlistController.Create)
 	playlist.DELETE("/:id", playlistController.Delete)
+	playlist.POST("/:id/track/:trackId", playlistController.AddTrack)
+	playlist.DELETE("/:id/track/:trackId", playlistController.DeleteTrack)
 
 	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", config.GetPort())))
 }

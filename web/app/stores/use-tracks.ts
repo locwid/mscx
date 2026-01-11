@@ -1,13 +1,18 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
 import { apiGetFile } from '~/api/actions'
-import { pushChange } from '~/api/sync-with-server'
+import { trySyncWithServer } from '~/api/sync-with-server'
 import { dexieStorage, type Track } from '~/dexie.storage'
 
 export const useTracks = defineStore('tracks', () => {
   const tracks = useObservable<Track[]>(
     from(
-      liveQuery(() => dexieStorage.tracks.toCollection().sortBy('createdAt')),
+      liveQuery(() =>
+        dexieStorage.tracks
+          .where('sync')
+          .notEqual('deleted')
+          .sortBy('createdAt'),
+      ),
     ),
   )
 
@@ -26,32 +31,37 @@ export const useTracks = defineStore('tracks', () => {
             size: file.size,
             type: file.type,
             file,
+            sync: 'created',
             createdAt: now,
           } satisfies Track
         }),
       )
       await dexieStorage.tracks.bulkAdd(items)
-      await Promise.all(
-        items.map((item) =>
-          pushChange({
-            id: item.id,
-            entity: 'track',
-            type: 'created',
-          }),
-        ),
-      )
+      trySyncWithServer()
     } catch (e) {
       console.error(e)
     }
   }
 
   async function deleteTrack(id: string) {
-    await dexieStorage.tracks.delete(id)
-    await pushChange({
-      id,
-      entity: 'track',
-      type: 'deleted',
-    })
+    await dexieStorage.transaction(
+      'rw',
+      ['tracks', 'playlistTracks'],
+      async ({ tracks, playlistTracks }) => {
+        await tracks.update(id, {
+          sync: 'deleted',
+          keepFile: false,
+          file: undefined,
+        })
+        await playlistTracks
+          .where('trackId')
+          .equals(id)
+          .modify((obj) => {
+            obj.sync = 'deleted'
+          })
+      },
+    )
+    trySyncWithServer()
   }
 
   async function downloadTrack(id: string) {

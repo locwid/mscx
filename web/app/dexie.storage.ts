@@ -1,50 +1,43 @@
 import Dexie, { type Table } from 'dexie'
 
-export interface Track {
+type Sync = 'none' | 'created' | 'deleted'
+
+interface BaseEntity {
   id: string
+  sync: Sync
+  createdAt: Date
+}
+
+export interface Track extends BaseEntity {
   name: string
   file?: File
   keepFile?: boolean
   size: number
   duration: number
   type: string
-  createdAt: Date
 }
 
-export interface Playlist {
-  id: string
+export interface Playlist extends BaseEntity {
   name: string
-  createdAt: Date
 }
 
-export interface PlaylistTracks {
-  id: string
+export interface PlaylistTracks extends BaseEntity {
   playlistId: string
   trackId: string
-}
-
-type Entity = 'track' | 'playlist' | 'playlistTrack'
-type ChangeType = 'created' | 'deleted'
-
-export interface Change {
-  id: string
-  entity: Entity
-  type: ChangeType
 }
 
 class DexieStorage extends Dexie {
   tracks!: Table<Track>
   playlists!: Table<Playlist>
   playlistTracks!: Table<PlaylistTracks>
-  changes!: Table<Change>
 
   constructor() {
     super('mscx-db')
+    const baseColumns = 'id, sync, createdAt'
     this.version(1).stores({
-      tracks: 'id, name, file, keepFile, size, duration, type, createdAt',
-      playlists: 'id, name, createdAt',
-      playlistTracks: 'id, [playlistId+trackId]',
-      changes: 'id, entity, type',
+      tracks: `${baseColumns}, name, file, keepFile, size, duration, type`,
+      playlists: `${baseColumns}, name`,
+      playlistTracks: `${baseColumns}, [playlistId+trackId]`,
     })
   }
 }

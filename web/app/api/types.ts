@@ -22,6 +22,7 @@ export interface PlaylistResponse {
   id: string
   name: string
   createdAt: string
+  tracks: TrackResponse[]
 }
 
 export interface CreatePlaylistPayload {
