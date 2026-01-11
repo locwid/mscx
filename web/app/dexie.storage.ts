@@ -37,7 +37,7 @@ class DexieStorage extends Dexie {
     this.version(1).stores({
       tracks: `${baseColumns}, name, file, keepFile, size, duration, type`,
       playlists: `${baseColumns}, name`,
-      playlistTracks: `${baseColumns}, [playlistId+trackId]`,
+      playlistTracks: `${baseColumns}, [playlistId+trackId], trackId`,
     })
   }
 }
