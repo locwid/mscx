@@ -1,17 +1,13 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
-import {
-  apiGetFile,
-} from '~/api/actions'
+import { apiGetFile } from '~/api/actions'
 import { pushChange } from '~/api/sync-with-server'
 import { dexieStorage, type Track } from '~/dexie.storage'
 
 export const useTracks = defineStore('tracks', () => {
   const tracks = useObservable<Track[]>(
     from(
-      liveQuery(() =>
-        dexieStorage.tracks.toCollection().sortBy('createdAt'),
-      ),
+      liveQuery(() => dexieStorage.tracks.toCollection().sortBy('createdAt')),
     ),
   )
 
@@ -35,11 +31,15 @@ export const useTracks = defineStore('tracks', () => {
         }),
       )
       await dexieStorage.tracks.bulkAdd(items)
-      await Promise.all(items.map(item => pushChange({
-        id: item.id,
-        entity: 'track',
-        type: 'created'
-      })))
+      await Promise.all(
+        items.map((item) =>
+          pushChange({
+            id: item.id,
+            entity: 'track',
+            type: 'created',
+          }),
+        ),
+      )
     } catch (e) {
       console.error(e)
     }
@@ -50,7 +50,7 @@ export const useTracks = defineStore('tracks', () => {
     await pushChange({
       id,
       entity: 'track',
-      type: 'deleted'
+      type: 'deleted',
     })
   }
 

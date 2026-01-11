@@ -7,9 +7,7 @@ export const usePlaylists = defineStore('playlists', () => {
   const playlists = useObservable(
     from(
       liveQuery(() =>
-        dexieStorage.playlists
-          .toCollection()
-          .sortBy('createdAt'),
+        dexieStorage.playlists.toCollection().sortBy('createdAt'),
       ),
     ),
   )
@@ -25,7 +23,7 @@ export const usePlaylists = defineStore('playlists', () => {
       await pushChange({
         id: payload.id,
         entity: 'playlist',
-        type: 'created'
+        type: 'created',
       })
     } catch (e) {
       console.error(e)
@@ -37,7 +35,7 @@ export const usePlaylists = defineStore('playlists', () => {
     await pushChange({
       id,
       entity: 'playlist',
-      type: 'deleted'
+      type: 'deleted',
     })
   }
 
@@ -47,7 +45,7 @@ export const usePlaylists = defineStore('playlists', () => {
     await pushChange({
       id,
       entity: 'playlistTrack',
-      type: 'created'
+      type: 'created',
     })
   }
 

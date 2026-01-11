@@ -9,7 +9,7 @@ import {
 } from './actions'
 
 export async function pushChange(change: Change) {
-  await dexieStorage.changes.where("id").equals(change.id).delete()
+  await dexieStorage.changes.where('id').equals(change.id).delete()
   await dexieStorage.changes.add(change)
 }
 
@@ -19,7 +19,7 @@ export async function trySyncWithServer() {
   }
 }
 
-dexieStorage.changes.hook('creating', debounce(trySyncWithServer))
+dexieStorage.changes.hook('creating', debounce(trySyncWithServer, 500))
 
 async function syncWithServer() {
   const changes = await dexieStorage.changes.toArray()
@@ -35,7 +35,11 @@ async function syncWithServer() {
         break
     }
   }
-  await Promise.all([freshTracks(), freshPlaylists(), dexieStorage.changes.clear()])
+  await Promise.all([
+    freshTracks(),
+    freshPlaylists(),
+    dexieStorage.changes.clear(),
+  ])
 }
 
 async function syncTrack(change: Change) {
