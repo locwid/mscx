@@ -22,10 +22,7 @@ function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-  <UDrawer
-    v-model:open="open"
-    title="new playlist"
-  >
+  <UDrawer v-model:open="open" title="new playlist">
     <slot />
     <template #body>
       <UForm

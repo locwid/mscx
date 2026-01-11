@@ -1,26 +1,19 @@
 import { liveQuery } from 'dexie'
 import { nanoid } from 'nanoid'
 import {
-  apiCreateTrack,
-  apiDeleteTrack,
   apiGetFile,
-  apiGetTracks,
 } from '~/api/actions'
+import { pushChange } from '~/api/sync-with-server'
 import { dexieStorage, type Track } from '~/dexie.storage'
 
 export const useTracks = defineStore('tracks', () => {
   const tracks = useObservable<Track[]>(
     from(
       liveQuery(() =>
-        dexieStorage.tracks
-          .where('syncStatus')
-          .notEqual('deleted')
-          .sortBy('createdAt'),
+        dexieStorage.tracks.toCollection().sortBy('createdAt'),
       ),
     ),
   )
-
-  const sync = useServerSync(syncWithServer)
 
   async function addTrack(files: File[]) {
     const now = new Date()
@@ -38,20 +31,27 @@ export const useTracks = defineStore('tracks', () => {
             type: file.type,
             file,
             createdAt: now,
-            syncStatus: 'created' as const,
           } satisfies Track
         }),
       )
       await dexieStorage.tracks.bulkAdd(items)
-      sync.trySync()
+      await Promise.all(items.map(item => pushChange({
+        id: item.id,
+        entity: 'track',
+        type: 'created'
+      })))
     } catch (e) {
       console.error(e)
     }
   }
 
   async function deleteTrack(id: string) {
-    await dexieStorage.tracks.update(id, { syncStatus: 'deleted' })
-    sync.trySync()
+    await dexieStorage.tracks.delete(id)
+    await pushChange({
+      id,
+      entity: 'track',
+      type: 'deleted'
+    })
   }
 
   async function downloadTrack(id: string) {
@@ -65,66 +65,9 @@ export const useTracks = defineStore('tracks', () => {
 
   return {
     tracks,
-    setupTracksSync: sync.setupSync,
     addTrack,
     deleteTrack,
     downloadTrack,
     unloadTrack,
   }
 })
-
-async function syncWithServer() {
-  const tracks = await dexieStorage.tracks
-    .where('syncStatus')
-    .notEqual('synced')
-    .toArray()
-  const tracksToCreate = tracks.filter(
-    (track) => track.syncStatus === 'created',
-  )
-  const tracksToDelete = tracks.filter(
-    (track) => track.syncStatus === 'deleted',
-  )
-
-  if (tracksToCreate.length) {
-    for (const track of tracksToCreate) {
-      if (!track.file) continue
-      await apiCreateTrack({
-        id: track.id,
-        name: track.name,
-        size: track.size,
-        duration: track.duration,
-        type: track.type,
-        createdAt: track.createdAt,
-        file: track.file,
-      })
-    }
-  }
-
-  if (tracksToDelete.length) {
-    await Promise.all([
-      ...tracksToDelete.map((track) => apiDeleteTrack(track.id)),
-    ])
-    await dexieStorage.tracks.bulkDelete(tracksToDelete.map((t) => t.id))
-  }
-
-  const actualTracks = await apiGetTracks()
-  await dexieStorage.transaction(
-    'readwrite',
-    ['tracks'],
-    async ({ tracks }) => {
-      await Promise.all(
-        actualTracks.map((track) => {
-          return tracks.upsert(track.id, {
-            name: track.name,
-            size: track.size,
-            type: track.type,
-            duration: track.duration,
-            createdAt: new Date(track.createdAt),
-            syncStatus: 'synced',
-          })
-        }),
-      )
-      await tracks.filter((t) => !t.keepFile).modify({ file: undefined })
-    },
-  )
-}

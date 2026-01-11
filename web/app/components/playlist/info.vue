@@ -13,10 +13,7 @@ const open = ref(false)
 </script>
 
 <template>
-  <UDrawer
-    v-model:open="open"
-    :title="playlist.name"
-  >
+  <UDrawer v-model:open="open" :title="playlist.name">
     <slot />
     <template #body>
       <div class="flex flex-col gap-2">

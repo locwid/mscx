@@ -8,7 +8,7 @@ export default defineAppConfig({
       slots: {
         content: 'max-w-lg mx-auto',
         body: 'pb-4',
-      }
+      },
     },
     icons: {
       arrowDown: 'i-lucide-arrow-down',

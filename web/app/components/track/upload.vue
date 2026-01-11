@@ -22,10 +22,7 @@ const onSubmit = async (event: FormSubmitEvent<Schema>) => {
 </script>
 
 <template>
-  <UDrawer
-    v-model:open="open"
-    title="upload tracks"
-  >
+  <UDrawer v-model:open="open" title="upload tracks">
     <slot />
     <template #body>
       <UForm

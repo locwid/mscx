@@ -12,10 +12,7 @@ const open = ref(false)
 </script>
 
 <template>
-  <UDrawer
-    v-model:open="open"
-    :title="track.name"
-  >
+  <UDrawer v-model:open="open" :title="track.name">
     <slot />
     <template #body>
       <div class="flex flex-col gap-2">

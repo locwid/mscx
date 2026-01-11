@@ -9,34 +9,42 @@ export interface Track {
   duration: number
   type: string
   createdAt: Date
-  syncStatus: 'synced' | 'created' | 'deleted'
 }
 
 export interface Playlist {
   id: string
   name: string
   createdAt: Date
-  syncStatus: 'synced' | 'created' | 'deleted'
 }
 
 export interface PlaylistTracks {
+  id: string
   playlistId: string
   trackId: string
-  syncStatus: 'synced' | 'created' | 'deleted'
+}
+
+type Entity = 'track' | 'playlist' | 'playlistTrack'
+type ChangeType = 'created' | 'deleted'
+
+export interface Change {
+  id: string
+  entity: Entity
+  type: ChangeType
 }
 
 class DexieStorage extends Dexie {
   tracks!: Table<Track>
   playlists!: Table<Playlist>
   playlistTracks!: Table<PlaylistTracks>
+  changes!: Table<Change>
 
   constructor() {
     super('mscx-db')
     this.version(1).stores({
-      tracks:
-        'id, name, file, keepFile, size, duration, type, createdAt, syncStatus',
-      playlists: 'id, name, createdAt, syncStatus',
-      playlistTracks: '[playlistId+trackId], syncStatus',
+      tracks: 'id, name, file, keepFile, size, duration, type, createdAt',
+      playlists: 'id, name, createdAt',
+      playlistTracks: 'id, [playlistId+trackId]',
+      changes: 'id, entity, type',
     })
   }
 }

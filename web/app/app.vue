@@ -1,13 +1,16 @@
 <script lang="ts" setup>
+import { trySyncWithServer } from './api/sync-with-server'
+
 const { currentTrack } = storeToRefs(usePlayer())
 const { switchToNextTrack } = usePlayer()
 
-const { setupTracksSync } = useTracks()
-const { setupPlaylistsSync } = usePlaylists()
-
 onBeforeMount(() => {
-  setupTracksSync()
-  setupPlaylistsSync()
+  trySyncWithServer()
+  window.addEventListener('online', trySyncWithServer)
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('online', trySyncWithServer)
 })
 </script>
 
