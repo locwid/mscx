@@ -21,7 +21,7 @@ const height = computed(
 </script>
 
 <template>
-  <div v-bind="containerProps" :style="{ height }">
+  <div v-if="tracks.length" v-bind="containerProps" :style="{ height }">
     <div v-bind="wrapperProps" class="space-y-2 p-2 mb-2">
       <TrackListRow
         v-for="item in list"
@@ -32,4 +32,5 @@ const height = computed(
       />
     </div>
   </div>
+  <UEmpty v-else title="No tracks" description="It looks like you haven't added any tracks" icon="i-lucide-info" class="m-2 ring-0" />
 </template>

@@ -5,7 +5,7 @@ const { headerTitle } = storeToRefs(useAppStore())
 
 <template>
   <div
-    class="p-4 sticky h-16 top-0 bg-muted z-10 flex justify-between items-center"
+    class="px-4 sticky h-16 top-0 bg-muted z-10 flex justify-between items-center"
   >
     <span class="inline-flex items-center gap-2">
       <UChip standalone inset :color="online ? 'success' : 'warning'" />
