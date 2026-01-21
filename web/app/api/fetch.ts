@@ -3,7 +3,7 @@ export const apiFetch = $fetch.create({
   onRequest: ({ options }) => {
     const authKey = useAuthStore().authKey
     if (authKey) {
-       options.headers.append('Authorization', authKey)
+      options.headers.append('Authorization', authKey)
     }
   },
   onResponseError: ({ response }) => {
@@ -11,5 +11,5 @@ export const apiFetch = $fetch.create({
       useAuthStore().authKey = ''
       navigateTo('/auth')
     }
-  }
+  },
 })

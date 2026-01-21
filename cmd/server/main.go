@@ -33,7 +33,7 @@ func main() {
 
 	api := e.Group("/api")
 	api.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
-		KeyLookup: "header:Authorization",
+		KeyLookup: "header:Authorization,query:authKey",
 		Validator: func(c *echo.Context, key string, source middleware.ExtractorSource) (bool, error) {
 			return key == config.GetAuthKey(), nil
 		},

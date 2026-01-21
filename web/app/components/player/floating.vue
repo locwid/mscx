@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
-import { getFileUrl } from '~/api/actions'
+import { useTrackFile } from '~/composables/use-track-file'
 
 const emit = defineEmits<{
   (e: 'ended'): void
@@ -11,18 +11,12 @@ const props = defineProps<{
   track: Track
 }>()
 
-const fileSrc = computed(() => {
-  if (props.track.file) {
-    return URL.createObjectURL(props.track.file)
-  }
-  return getFileUrl(props.track.id)
-})
+const fileSrc = useTrackFile(() => props.track)
 
 const audioRef = useTemplateRef('audio')
 const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
   src: fileSrc,
 })
-useTitle(props.track.name)
 
 watch(ended, (value) => {
   if (value) emit('ended')

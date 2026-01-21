@@ -37,7 +37,7 @@ const dropAuthKey = () => {
     side="right"
     class="max-w-lg mx-auto"
     :ui="{
-      footer: 'flex justify-between'
+      footer: 'flex justify-between',
     }"
   >
     <slot />
@@ -46,7 +46,13 @@ const dropAuthKey = () => {
     </template>
     <template #footer>
       <UColorModeSwitch />
-      <UButton color="error" size="md" variant="subtle" label="drop auth key" @click="dropAuthKey" />
+      <UButton
+        color="error"
+        size="md"
+        variant="subtle"
+        label="drop auth key"
+        @click="dropAuthKey"
+      />
     </template>
   </USlideover>
 </template>

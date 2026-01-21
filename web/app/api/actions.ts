@@ -65,6 +65,8 @@ export const apiDeleteTrackFromPlaylist = (
 }
 
 export const getFileUrl = (id: string) => `/api/track/${id}/file`
+export const getFileUrlWithAuthKey = (id: string, authKey: string) =>
+  `${getFileUrl(id)}?authKey=${authKey}`
 
 export const apiGetFile = async (filename: string) => {
   const response = await apiFetch.raw<ReadableStream>(getFileUrl(filename), {
