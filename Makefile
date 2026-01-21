@@ -6,8 +6,11 @@ else
 	CC = gcc
 endif
 
+
+# Defined for dev env, for production must be provided manually
 PORT ?= 4000
 DATA_FOLDER ?= _data
+AUTH_KEY ?= strong_password
 
 .PHONY: all build-nuxt build-go package clean dev dev-nuxt dev-go
 
@@ -34,7 +37,7 @@ dev-nuxt:
 	cd web && bun install && SERVER_PORT=$(PORT) bun run dev
 
 dev-go:
-	PORT=$(PORT) DATA_FOLDER=$(DATA_FOLDER) go run cmd/server/main.go
+	PORT=$(PORT) DATA_FOLDER=$(DATA_FOLDER) AUTH_KEY=$(AUTH_KEY) go run cmd/server/main.go
 
 clean:
 	rm -rf dist app web/node_modules web/.output web/dist web/.nuxt

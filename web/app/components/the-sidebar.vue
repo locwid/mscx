@@ -2,6 +2,7 @@
 import type { NavigationMenuItem } from '@nuxt/ui'
 
 const open = ref(false)
+
 const close = () => (open.value = false)
 
 const navigation: NavigationMenuItem[] = [
@@ -20,6 +21,13 @@ const navigation: NavigationMenuItem[] = [
     onSelect: close,
   },
 ]
+
+const { authKey } = storeToRefs(useAuthStore())
+
+const dropAuthKey = () => {
+  authKey.value = ''
+  navigateTo('/auth')
+}
 </script>
 
 <template>
@@ -28,13 +36,17 @@ const navigation: NavigationMenuItem[] = [
     title="mscx"
     side="right"
     class="max-w-lg mx-auto"
+    :ui="{
+      footer: 'flex justify-between'
+    }"
   >
     <slot />
     <template #body>
       <UNavigationMenu orientation="vertical" :items="navigation" />
     </template>
     <template #footer>
-      <UColorModeSwitch size="xl" />
+      <UColorModeSwitch />
+      <UButton color="error" size="md" variant="subtle" label="drop auth key" @click="dropAuthKey" />
     </template>
   </USlideover>
 </template>

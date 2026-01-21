@@ -9,18 +9,20 @@ import (
 
 const folderPermission = 0755
 
-type config struct {
+type Config struct {
 	port        string
 	dataFolder  string
 	filesFolder string
 	dbName      string
+	authKey     string
 }
 
-var cfg config
+var cfg Config
 
 func InitConfig() {
 	port := os.Getenv("PORT")
 	dataFolder := os.Getenv("DATA_FOLDER")
+	authKey := os.Getenv("AUTH_KEY")
 
 	if port == "" {
 		panic("PORT environment variable is required")
@@ -28,10 +30,14 @@ func InitConfig() {
 	if dataFolder == "" {
 		panic("DATA_FOLDER environment variable is required")
 	}
+	if authKey == "" {
+		panic("AUTH_KEY environment variable is required")
+	}
 
-	cfg = config{
+	cfg = Config{
 		port:        port,
 		dataFolder:  dataFolder,
+		authKey:     authKey,
 		filesFolder: "files",
 		dbName:      "data.db",
 	}
@@ -51,6 +57,10 @@ func InitConfig() {
 			panic("Failed to create files folder")
 		}
 	}
+}
+
+func GetAuthKey() string {
+	return cfg.authKey
 }
 
 func GetPort() string {

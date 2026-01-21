@@ -32,6 +32,12 @@ func main() {
 	}))
 
 	api := e.Group("/api")
+	api.Use(middleware.KeyAuthWithConfig(middleware.KeyAuthConfig{
+		KeyLookup: "header:Authorization",
+		Validator: func(c *echo.Context, key string, source middleware.ExtractorSource) (bool, error) {
+			return key == config.GetAuthKey(), nil
+		},
+	}))
 
 	trackController := controller.MakeTrackController(db)
 	track := api.Group("/track")
