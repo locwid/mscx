@@ -3,18 +3,18 @@ package controller
 import (
 	"net/http"
 
-	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v5"
 	"github.com/locwid/mscx/internal/database/models"
 	"github.com/locwid/mscx/internal/dto"
 	"gorm.io/gorm"
 )
 
 type PlaylistController interface {
-	Create(c echo.Context) error
-	GetList(c echo.Context) error
-	Delete(c echo.Context) error
-	AddTrack(c echo.Context) error
-	DeleteTrack(c echo.Context) error
+	Create(c *echo.Context) error
+	GetList(c *echo.Context) error
+	Delete(c *echo.Context) error
+	AddTrack(c *echo.Context) error
+	DeleteTrack(c *echo.Context) error
 }
 
 type playlistController struct {
@@ -26,11 +26,11 @@ func MakePlaylistContoller(db *gorm.DB) PlaylistController {
 }
 
 // AddTrack implements [PlaylistController].
-func (p playlistController) AddTrack(c echo.Context) error {
+func (p playlistController) AddTrack(c *echo.Context) error {
 	var id, trackId string
-	err := echo.PathParamsBinder(c).String("id", &id).String("trackId", &trackId).BindError()
+	err := echo.PathValuesBinder(c).String("id", &id).String("trackId", &trackId).BindError()
 	if err != nil {
-		return echo.ErrBadRequest
+		return echo.ErrBadRequest.Wrap(err)
 	}
 	err = p.db.Model(&models.Playlist{ID: id}).Association("Tracks").Append(&models.Track{ID: trackId})
 	if err != nil {
@@ -40,11 +40,11 @@ func (p playlistController) AddTrack(c echo.Context) error {
 }
 
 // DeleteTrack implements [PlaylistController].
-func (p playlistController) DeleteTrack(c echo.Context) error {
+func (p playlistController) DeleteTrack(c *echo.Context) error {
 	var id, trackId string
-	err := echo.PathParamsBinder(c).String("id", &id).String("trackId", &trackId).BindError()
+	err := echo.PathValuesBinder(c).String("id", &id).String("trackId", &trackId).BindError()
 	if err != nil {
-		return echo.ErrBadRequest
+		return echo.ErrBadRequest.Wrap(err)
 	}
 	err = p.db.Model(&models.Playlist{ID: id}).Association("Tracks").Delete(&models.Track{ID: trackId})
 	if err != nil {
@@ -54,10 +54,10 @@ func (p playlistController) DeleteTrack(c echo.Context) error {
 }
 
 // Create implements [PlaylistController].
-func (p playlistController) Create(c echo.Context) error {
+func (p playlistController) Create(c *echo.Context) error {
 	payload := new(dto.CreatePlaylistDTO)
 	if err := c.Bind(payload); err != nil {
-		return echo.ErrBadRequest
+		return echo.ErrBadRequest.Wrap(err)
 	}
 
 	playlist := models.Playlist{
@@ -73,11 +73,11 @@ func (p playlistController) Create(c echo.Context) error {
 }
 
 // Delete implements [PlaylistController].
-func (p playlistController) Delete(c echo.Context) error {
+func (p playlistController) Delete(c *echo.Context) error {
 	var id string
-	err := echo.PathParamsBinder(c).String("id", &id).BindError()
+	err := echo.PathValuesBinder(c).String("id", &id).BindError()
 	if err != nil {
-		return echo.ErrBadRequest
+		return echo.ErrBadRequest.Wrap(err)
 	}
 
 	_, err = gorm.G[models.Playlist](p.db).Where("id = ?", id).Delete(c.Request().Context())
@@ -89,7 +89,7 @@ func (p playlistController) Delete(c echo.Context) error {
 }
 
 // GetList implements [PlaylistController].
-func (p playlistController) GetList(c echo.Context) error {
+func (p playlistController) GetList(c *echo.Context) error {
 	playlists, err := gorm.G[models.Playlist](p.db).Preload("Tracks", nil).Find(c.Request().Context())
 	if err != nil {
 		return echo.ErrInternalServerError

@@ -1,11 +1,16 @@
 package main
 
 import (
+	"context"
 	"fmt"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-playground/validator/v10"
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
+	"github.com/labstack/echo/v5"
+	"github.com/labstack/echo/v5/middleware"
 	"github.com/locwid/mscx/internal/config"
 	"github.com/locwid/mscx/internal/controller"
 	"github.com/locwid/mscx/internal/database"
@@ -21,7 +26,6 @@ func main() {
 		Validator: validator.New(),
 	}
 	e.Use(middleware.Recover())
-	e.Use(middleware.CORS())
 	e.Use(middleware.StaticWithConfig(middleware.StaticConfig{
 		Root:  "web",
 		HTML5: true,
@@ -44,5 +48,15 @@ func main() {
 	playlist.POST("/:id/track/:trackId", playlistController.AddTrack)
 	playlist.DELETE("/:id/track/:trackId", playlistController.DeleteTrack)
 
-	e.Logger.Fatal(e.Start(fmt.Sprintf(":%s", config.GetPort())))
+	// Gracefull shutdown
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	sc := echo.StartConfig{
+		Address:         fmt.Sprintf(":%s", config.GetPort()),
+		GracefulTimeout: 2 * time.Second,
+	}
+	if err := sc.Start(ctx, e); err != nil {
+		e.Logger.Error("failed to start server", "error", err)
+	}
 }
