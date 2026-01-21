@@ -47,9 +47,9 @@ export default defineNuxtConfig({
   ui: {
     theme: {
       defaultVariants: {
-        size: 'xl'
-      }
-    }
+        size: 'xl',
+      },
+    },
   },
   nitro: {
     minify: true,

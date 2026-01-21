@@ -12,5 +12,11 @@ const { deletePlaylist } = usePlaylists()
       @delete="deletePlaylist"
     />
   </div>
-  <UEmpty v-else title="No playlists" description="It looks like you haven't created any playlists" icon="i-lucide-info" class="m-2 ring-0" />
+  <UEmpty
+    v-else
+    title="No playlists"
+    description="It looks like you haven't created any playlists"
+    icon="i-lucide-info"
+    class="m-2 ring-0"
+  />
 </template>

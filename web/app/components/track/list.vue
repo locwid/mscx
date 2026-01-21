@@ -6,7 +6,7 @@ const { tracks = [] } = defineProps<{
   tracks?: Track[]
 }>()
 
-const { currentTrack } = storeToRefs(usePlayer())
+const { currentTrack, currentTrackId } = storeToRefs(usePlayer())
 
 const { list, containerProps, wrapperProps } = useVirtualList(
   computed(() => tracks),
@@ -27,10 +27,16 @@ const height = computed(
         v-for="item in list"
         :key="item.data.id"
         :track="item.data"
-        @click="currentTrack = item.data"
-        :active="currentTrack?.id === item.data.id"
+        @click="currentTrackId = item.data.id"
+        :active="currentTrackId === item.data.id"
       />
     </div>
   </div>
-  <UEmpty v-else title="No tracks" description="It looks like you haven't added any tracks" icon="i-lucide-info" class="m-2 ring-0" />
+  <UEmpty
+    v-else
+    title="No tracks"
+    description="It looks like you haven't added any tracks"
+    icon="i-lucide-info"
+    class="m-2 ring-0"
+  />
 </template>

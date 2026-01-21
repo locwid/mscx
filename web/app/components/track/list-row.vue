@@ -8,7 +8,6 @@ defineProps<{
 }>()
 
 defineEmits<{
-  (e: 'delete', id: string): void
   (e: 'click', id: string): void
 }>()
 </script>
@@ -31,7 +30,7 @@ defineEmits<{
         </span>
       </div>
     </div>
-    <TrackInfo :track="track" @delete="$emit('delete', track.id)">
+    <TrackInfo :track="track">
       <UButton
         color="neutral"
         variant="ghost"

@@ -95,11 +95,11 @@ async function syncPlaylistTracks() {
 async function freshTracks() {
   const items = await apiGetTracks()
   await dexieStorage.transaction('rw', ['tracks'], async ({ tracks }) => {
-    const withFiles = await tracks.filter(obj => !!obj.keepFile).toArray()
+    const withFiles = await tracks.filter((obj) => !!obj.keepFile).toArray()
     await tracks.clear()
     await tracks.bulkAdd(
-      items.map(track => {
-        const prev = withFiles.find(item => item.id === track.id)
+      items.map((track) => {
+        const prev = withFiles.find((item) => item.id === track.id)
         return {
           id: track.id,
           name: track.name,
@@ -111,7 +111,7 @@ async function freshTracks() {
           sync: 'none',
           createdAt: new Date(track.createdAt),
         }
-      })
+      }),
     )
   })
 }
@@ -136,13 +136,13 @@ async function freshPlaylists() {
         })),
       )
       await playlistTracks.bulkAdd(
-        rels.map(rel => ({
+        rels.map((rel) => ({
           id: nanoid(),
           playlistId: rel.playlistId,
           trackId: rel.trackId,
           createdAt: new Date(),
-          sync: 'none'
-        }))
+          sync: 'none',
+        })),
       )
     },
   )
