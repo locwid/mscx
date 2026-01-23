@@ -2,13 +2,15 @@
 import type { Track } from '~/dexie.storage'
 
 const { downloadTrack, unloadTrack, deleteTrack } = useTracks()
-const { addTrackToPlaylist } = usePlaylists()
+const { addTrackToPlaylist, deleteTrackFromPlaylist } = usePlaylists()
 
 defineProps<{
   track: Track
 }>()
 
 const open = ref(false)
+
+const playlistId = inject<string>('playlistId', '')
 </script>
 
 <template>
@@ -34,7 +36,7 @@ const open = ref(false)
           "
         >
           <UButton
-            leading-icon="i-lucide-plus"
+            leading-icon="i-lucide-book-plus"
             color="neutral"
             variant="ghost"
             size="xl"
@@ -42,6 +44,16 @@ const open = ref(false)
             add to playlist
           </UButton>
         </PlaylistPicker>
+        <UButton
+            v-if="playlistId"
+            leading-icon="i-lucide-book-x"
+            color="neutral"
+            variant="ghost"
+            size="xl"
+            @click="(deleteTrackFromPlaylist(playlistId, track.id), open = false)"
+          >
+            remove from playlist
+          </UButton>
         <UButton
           v-if="track.keepFile"
           leading-icon="i-lucide-delete"

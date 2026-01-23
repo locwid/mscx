@@ -2,9 +2,12 @@
 import { useVirtualList } from '@vueuse/core'
 import type { Track } from '~/dexie.storage'
 
-const { tracks = [] } = defineProps<{
+const { tracks = [], playlistId } = defineProps<{
   tracks?: Track[]
+  playlistId?: string
 }>()
+
+provide('playlistId', playlistId)
 
 const { currentTrack, currentTrackId } = storeToRefs(usePlayer())
 

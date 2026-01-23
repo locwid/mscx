@@ -28,5 +28,5 @@ const tracks = useObservable(
 </script>
 
 <template>
-  <TrackList :tracks="tracks" />
+  <TrackList :tracks="tracks" :playlist-id="playlistId" />
 </template>
