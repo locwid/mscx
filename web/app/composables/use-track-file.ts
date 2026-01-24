@@ -1,4 +1,4 @@
-import { getFileUrlWithAuthKey } from '~/api/actions'
+import { getFileUrlWithAuthKey } from '~/shared/api/actions'
 import type { Track } from '~/dexie.storage'
 
 export function useTrackFile(trackGetter: () => Track) {

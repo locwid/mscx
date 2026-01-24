@@ -1,6 +1,8 @@
 <script lang="ts" setup>
-const { playlists } = storeToRefs(usePlaylists())
-const { deletePlaylist } = usePlaylists()
+import { getAllPlaylistsQuery } from '~/shared/queries'
+
+const playlists = useDexieLiveQuery(() => getAllPlaylistsQuery())
+const { currentPlaylistId } = storeToRefs(usePlayer())
 </script>
 
 <template>
@@ -9,7 +11,7 @@ const { deletePlaylist } = usePlaylists()
       v-for="playlist in playlists"
       :key="playlist.id"
       :playlist="playlist"
-      @delete="deletePlaylist"
+      :playing="playlist.id === currentPlaylistId"
     />
   </div>
   <UEmpty

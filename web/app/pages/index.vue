@@ -1,7 +1,9 @@
 <script lang="ts" setup>
+import { getAllTracksQuery } from '~/shared/queries'
+
 useHeaderTitle('tracks')
 
-const { tracks } = storeToRefs(useTracks())
+const tracks = useDexieLiveQuery(() => getAllTracksQuery())
 </script>
 
 <template>

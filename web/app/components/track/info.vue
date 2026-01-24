@@ -1,8 +1,12 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
-
-const { downloadTrack, unloadTrack, deleteTrack } = useTracks()
-const { addTrackToPlaylist, deleteTrackFromPlaylist } = usePlaylists()
+import {
+  addTrackToPlaylistQuery,
+  deleteTrackFromPlaylistQuery,
+  deleteTrackQuery,
+  downloadTrackQuery,
+  unloadTrackQuery,
+} from '~/shared/queries'
 
 defineProps<{
   track: Track
@@ -29,7 +33,7 @@ const playlistId = inject<string>('playlistId', '')
           @confirm="
             (idList) => {
               idList.forEach((playlistId) =>
-                addTrackToPlaylist(playlistId, track.id),
+                addTrackToPlaylistQuery(playlistId, track.id),
               )
               open = false
             }
@@ -45,22 +49,24 @@ const playlistId = inject<string>('playlistId', '')
           </UButton>
         </PlaylistPicker>
         <UButton
-            v-if="playlistId"
-            leading-icon="i-lucide-book-x"
-            color="neutral"
-            variant="ghost"
-            size="xl"
-            @click="(deleteTrackFromPlaylist(playlistId, track.id), open = false)"
-          >
-            remove from playlist
-          </UButton>
+          v-if="playlistId"
+          leading-icon="i-lucide-book-x"
+          color="neutral"
+          variant="ghost"
+          size="xl"
+          @click="
+            (deleteTrackFromPlaylistQuery(playlistId, track.id), (open = false))
+          "
+        >
+          remove from playlist
+        </UButton>
         <UButton
           v-if="track.keepFile"
           leading-icon="i-lucide-delete"
           color="neutral"
           variant="ghost"
           size="xl"
-          @click="(unloadTrack(track.id), (open = false))"
+          @click="(unloadTrackQuery(track.id), (open = false))"
         >
           remove file
         </UButton>
@@ -70,7 +76,7 @@ const playlistId = inject<string>('playlistId', '')
           color="neutral"
           variant="ghost"
           size="xl"
-          @click="(downloadTrack(track.id), (open = false))"
+          @click="(downloadTrackQuery(track.id), (open = false))"
         >
           save file
         </UButton>
@@ -79,7 +85,7 @@ const playlistId = inject<string>('playlistId', '')
           color="error"
           variant="ghost"
           size="xl"
-          @click="(deleteTrack(track.id), (open = false))"
+          @click="(deleteTrackQuery(track.id), (open = false))"
         >
           delete
         </UButton>

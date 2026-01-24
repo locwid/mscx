@@ -1,29 +1,18 @@
 <script lang="ts" setup>
-import { liveQuery } from 'dexie'
-import { dexieStorage, type Track } from '~/dexie.storage'
+import { dexieStorage, type Playlist } from '~/dexie.storage'
+import { getPlaylistTracksQuery } from '~/shared/queries'
 
 const route = useRoute()
 const playlistId = computed(() => route.params.id as string)
 
-const playlist = computedAsync(() =>
+const playlist = useDexieLiveQuery(() =>
   dexieStorage.playlists.get(playlistId.value),
 )
 const name = computed(() => playlist.value?.name ?? '')
 useHeaderTitle(() => name.value)
 
-const tracks = useObservable(
-  from(
-    liveQuery(async () => {
-      const pairs = await dexieStorage.playlistTracks
-        .where('playlistId')
-        .equals(playlistId.value)
-        .toArray()
-      const items = await Promise.all(
-        pairs.map((p) => dexieStorage.tracks.get(p.trackId)),
-      )
-      return items.filter(Boolean) as Track[]
-    }),
-  ),
+const tracks = useDexieLiveQueryWithDeps(playlist, (p: Playlist) =>
+  p?.id ? getPlaylistTracksQuery(p.id) : [],
 )
 </script>
 

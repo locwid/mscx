@@ -2,18 +2,18 @@
 import type { Playlist } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
 
-defineEmits<{
-  (e: 'delete', id: string): void
-}>()
-
 defineProps<{
   playlist: Playlist
+  playing?: boolean
 }>()
+
+const { startPlayList, stopPlaylist } = usePlayer()
 </script>
 
 <template>
   <div
     class="border h-14 border-accented flex gap-2 items-center justify-between rounded-md"
+    :class="{ 'border-primary-500': playing }"
   >
     <div
       class="flex items-center gap-2 p-2 grow"
@@ -22,14 +22,15 @@ defineProps<{
       <Avatar :name="playlist.id" variant="pixel" class="grow-0 shrink-0" />
       <span>{{ playlist.name }}</span>
     </div>
-    <PlaylistInfo :playlist="playlist" @delete="$emit('delete', playlist.id)">
+    <div class="flex gap-2 mr-2 ml-auto" @click.stop>
+      <PlaylistInfo :playlist="playlist">
+        <UButton icon="i-lucide-ellipsis" variant="ghost" color="neutral" />
+      </PlaylistInfo>
       <UButton
-        icon="i-lucide-ellipsis"
+        :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
         variant="ghost"
-        color="neutral"
-        class="mr-2 ml-auto"
-        @click.prevent
+        @click="playing ? stopPlaylist() : startPlayList(playlist.id)"
       />
-    </PlaylistInfo>
+    </div>
   </div>
 </template>

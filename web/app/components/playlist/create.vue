@@ -1,8 +1,7 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import z from 'zod'
-
-const { addPlaylist } = usePlaylists()
+import { addPlaylistQuery } from '~/shared/queries'
 
 const schema = z.object({
   name: z.string().min(1),
@@ -16,7 +15,7 @@ const state = reactive<Schema>({
 })
 
 function onSubmit(event: FormSubmitEvent<Schema>) {
-  addPlaylist(event.data.name)
+  addPlaylistQuery(event.data.name)
   open.value = false
 }
 </script>

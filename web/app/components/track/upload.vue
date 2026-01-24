@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import z from 'zod'
+import { addTracksQuery } from '~/shared/queries'
 
 const schema = z.object({
   files: z.file().array().min(1),
@@ -13,10 +14,9 @@ const state = reactive<Schema>({
 })
 
 const open = ref(false)
-const { addTrack } = useTracks()
 
 const onSubmit = async (event: FormSubmitEvent<Schema>) => {
-  await addTrack(event.data.files)
+  await addTracksQuery(event.data.files)
   open.value = false
 }
 </script>

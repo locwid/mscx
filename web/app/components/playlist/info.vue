@@ -1,9 +1,6 @@
 <script lang="ts" setup>
 import type { Playlist } from '~/dexie.storage'
-
-defineEmits<{
-  (e: 'delete'): void
-}>()
+import { deletePlaylistQuery } from '~/shared/queries'
 
 defineProps<{
   playlist: Playlist
@@ -21,7 +18,7 @@ const open = ref(false)
           icon="i-lucide-trash"
           variant="ghost"
           color="error"
-          @click="$emit('delete')"
+          @click="deletePlaylistQuery(playlist.id)"
         >
           delete
         </UButton>

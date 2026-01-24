@@ -1,11 +1,12 @@
 <script lang="ts" setup>
 import type { CheckboxGroupItem } from '@nuxt/ui'
+import { getAllPlaylistsQuery } from '~/shared/queries'
 
 defineEmits<{
   (e: 'confirm', idList: string[]): void
 }>()
 
-const { playlists } = storeToRefs(usePlaylists())
+const playlists = useDexieLiveQuery(() => getAllPlaylistsQuery())
 
 const items = computed<CheckboxGroupItem[]>(
   () =>

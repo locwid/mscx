@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { trySyncWithServer } from '~/api/sync-with-server'
+import { trySyncWithServer } from '~/shared/api/sync-with-server'
 
 const { currentTrack } = storeToRefs(usePlayer())
 const { switchToNextTrack } = usePlayer()
