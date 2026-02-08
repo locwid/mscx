@@ -1,4 +1,4 @@
-import { getAllTracksQuery, getPlaylistTracksQuery } from '~/shared/queries'
+import { getAllTracksQuery, getPlaylistTracksQuery, getPlaylistByIdQuery } from '~/shared/queries'
 import { type Track } from '~/dexie.storage'
 
 export const usePlayer = defineStore('player', () => {
@@ -6,12 +6,20 @@ export const usePlayer = defineStore('player', () => {
   const currentTrackId = ref<string | null>(null)
   const shuffle = ref(false)
   const shuffleQueue = ref<Track[]>([])
+  const isFullscreenOpen = ref(false)
 
   const tracks = useDexieLiveQueryWithDeps(currentPlaylistId, (id?: string) => {
     if (id) {
       return getPlaylistTracksQuery(id)
     }
     return getAllTracksQuery()
+  })
+
+  const currentPlaylist = useDexieLiveQueryWithDeps(currentPlaylistId, (id?: string) => {
+    if (id) {
+      return getPlaylistByIdQuery(id)
+    }
+    return undefined
   })
 
   function generateShuffleQueue() {
@@ -101,12 +109,24 @@ export const usePlayer = defineStore('player', () => {
     shuffle.value = !shuffle.value
   }
 
+  function openFullscreen() {
+    isFullscreenOpen.value = true
+  }
+
+  function closeFullscreen() {
+    isFullscreenOpen.value = false
+  }
+
   return {
     currentPlaylistId: readonly(currentPlaylistId),
+    currentPlaylist,
     currentTrackId,
     currentTrack,
     shuffle: readonly(shuffle),
+    isFullscreenOpen: readonly(isFullscreenOpen),
     toggleShuffle,
+    openFullscreen,
+    closeFullscreen,
     startPlayList,
     stopPlaylist,
     switchToNextTrack,

@@ -70,6 +70,10 @@ export function getAllPlaylistsQuery() {
     .sortBy('createdAt')
 }
 
+export function getPlaylistByIdQuery(id: string) {
+  return dexieStorage.playlists.get(id)
+}
+
 export async function addPlaylistQuery(name: string) {
   await dexieStorage.playlists.add({
     id: nanoid(),

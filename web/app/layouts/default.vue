@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { trySyncWithServer } from '~/shared/api/sync-with-server'
 
-const { currentTrack } = storeToRefs(usePlayer())
+const { currentTrack, isFullscreenOpen } = storeToRefs(usePlayer())
 const { switchToNextTrack } = usePlayer()
 
 onBeforeMount(() => {
@@ -20,11 +20,16 @@ onBeforeUnmount(() => {
     <slot />
     <Transition name="slide-up">
       <PlayerFloating
-        v-if="currentTrack"
+        v-if="currentTrack && !isFullscreenOpen"
         :track="currentTrack"
         @ended="switchToNextTrack"
       />
     </Transition>
+    <PlayerFullscreen
+      v-if="currentTrack"
+      :track="currentTrack"
+      @ended="switchToNextTrack"
+    />
   </div>
 </template>
 

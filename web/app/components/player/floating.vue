@@ -23,11 +23,16 @@ const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
 watch(ended, (value) => {
   if (value) emit('ended')
 })
+
+function handleDoubleClick() {
+  player.openFullscreen()
+}
 </script>
 
 <template>
   <div
     class="fixed bottom-0 h-18 bg-muted flex justify-between overflow-hidden max-w-lg w-full left-1/2 -translate-x-1/2 px-2 py-4"
+    @dblclick="handleDoubleClick"
   >
     <Transition name="fade" mode="out-in">
       <Avatar :key="track.id" :name="track.id" class="grow-0 shrink-0" />
@@ -52,25 +57,25 @@ watch(ended, (value) => {
         size="xl"
         icon="i-lucide-shuffle"
         :color="player.shuffle ? 'primary' : undefined"
-        @click="player.toggleShuffle()"
+        @click.stop="player.toggleShuffle()"
       />
       <UButton
         variant="subtle"
         size="xl"
         icon="i-lucide-skip-back"
-        @click="player.switchToPreviousTrack()"
+        @click.stop="player.switchToPreviousTrack()"
       />
       <UButton
         variant="subtle"
         size="xl"
         :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
-        @click="playing = !playing"
+        @click.stop="playing = !playing"
       />
       <UButton
         variant="subtle"
         size="xl"
         icon="i-lucide-skip-forward"
-        @click="player.switchToNextTrack()"
+        @click.stop="player.switchToNextTrack()"
       />
     </div>
   </div>
