@@ -1,3 +1,5 @@
+NPROCS := $(shell sysctl -n hw.ncpu | grep -o '[0-9]\+')
+MAKEFLAGS += -j$(NPROCS)
 GOOS ?= linux
 GOARCH ?= amd64
 ifeq ($(shell uname -s),Darwin)
