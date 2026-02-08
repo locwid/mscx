@@ -2,6 +2,7 @@
 import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
 import { useTrackFile } from '~/composables/use-track-file'
+import { usePlayer } from '~/stores/use-player'
 
 const emit = defineEmits<{
   (e: 'ended'): void
@@ -11,6 +12,7 @@ const props = defineProps<{
   track: Track
 }>()
 
+const player = usePlayer()
 const fileSrc = useTrackFile(() => props.track)
 
 const audioRef = useTemplateRef('audio')
@@ -44,11 +46,32 @@ watch(ended, (value) => {
         </div>
       </div>
     </Transition>
-    <UButton
-      variant="subtle"
-      size="xl"
-      :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
-      @click="playing = !playing"
-    />
+    <div class="flex gap-1">
+      <UButton
+        :variant="player.shuffle ? 'solid' : 'subtle'"
+        size="xl"
+        icon="i-lucide-shuffle"
+        :color="player.shuffle ? 'primary' : undefined"
+        @click="player.toggleShuffle()"
+      />
+      <UButton
+        variant="subtle"
+        size="xl"
+        icon="i-lucide-skip-back"
+        @click="player.switchToPreviousTrack()"
+      />
+      <UButton
+        variant="subtle"
+        size="xl"
+        :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
+        @click="playing = !playing"
+      />
+      <UButton
+        variant="subtle"
+        size="xl"
+        icon="i-lucide-skip-forward"
+        @click="player.switchToNextTrack()"
+      />
+    </div>
   </div>
 </template>
