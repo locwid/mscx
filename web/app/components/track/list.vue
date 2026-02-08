@@ -9,7 +9,8 @@ const { tracks = [], playlistId } = defineProps<{
 
 provide('playlistId', playlistId)
 
-const { currentTrack, currentTrackId } = storeToRefs(usePlayer())
+const player = usePlayer()
+const { currentTrack, currentTrackId } = storeToRefs(player)
 
 const { list, containerProps, wrapperProps } = useVirtualList(
   computed(() => tracks),
@@ -21,6 +22,10 @@ const { list, containerProps, wrapperProps } = useVirtualList(
 const height = computed(
   () => `calc(100lvh - 64px - ${currentTrack.value ? `72px` : '0px'})`,
 )
+
+function handleTrackClick(trackId: string) {
+  player.start(trackId, playlistId)
+}
 </script>
 
 <template>
@@ -30,7 +35,7 @@ const height = computed(
         v-for="item in list"
         :key="item.data.id"
         :track="item.data"
-        @click="currentTrackId = item.data.id"
+        @click="handleTrackClick(item.data.id)"
         :active="currentTrackId === item.data.id"
       />
     </div>

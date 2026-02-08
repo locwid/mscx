@@ -7,7 +7,7 @@ defineProps<{
   playing?: boolean
 }>()
 
-const { startPlayList, stopPlaylist } = usePlayer()
+const { start, stop } = usePlayer()
 </script>
 
 <template>
@@ -29,7 +29,7 @@ const { startPlayList, stopPlaylist } = usePlayer()
       <UButton
         :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
         variant="ghost"
-        @click="playing ? stopPlaylist() : startPlayList(playlist.id)"
+        @click="playing ? stop() : start(undefined, playlist.id)"
       />
     </div>
   </div>

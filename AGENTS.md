@@ -140,7 +140,7 @@ mscx - full-stack PWA-приложение для управления колл�
 **use-player.ts** - управление плеером:
 - `currentTrackId`, `currentPlaylistId` - текущий трек/плейлист
 - `tracks` - реактивный запрос треков через Dexie
-- Функции: `startPlayList`, `stopPlaylist`, `switchToNextTrack`
+- Функции: `start`, `stop`, `switchToNextTrack`
 
 **use-auth.ts** - авторизация:
 - Хранение auth токена
@@ -330,7 +330,7 @@ export const usePlayer = defineStore('player', () => {
 
 #### Обработка событий
 - Используйте `@click`, `@submit` и т.д.
-- Обработчики: глагол + действие (например, `handleSubmit`, `startPlayList`)
+- Обработчики: глагол + действие (например, `handleSubmit`, `start`)
 
 ## Разработка
 
