@@ -11,14 +11,6 @@ const { switchToNextTrack } = player
 const audio = useAudio()
 provide(AUDIO_INJECTION_KEY, audio)
 
-const { currentTrackId } = storeToRefs(player)
-useFaviconVisualizer({
-  playing: audio.playing,
-  analyserNode: audio.analyserNode,
-  getFrequencyData: audio.getFrequencyData,
-  trackId: currentTrackId,
-})
-
 const fileSrc = computed(() => {
   const track = currentTrack.value
   if (!track) return ''
