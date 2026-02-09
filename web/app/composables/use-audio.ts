@@ -1,9 +1,10 @@
 const audioElement = document.createElement('audio')
 audioElement.preload = 'metadata'
+audioElement.setAttribute('playsinline', '')
+audioElement.setAttribute('webkit-playsinline', '')
 
 let audioContext: AudioContext | null = null
 let analyser: AnalyserNode | null = null
-let sourceNode: MediaElementAudioSourceNode | null = null
 let frequencyData: Uint8Array<ArrayBuffer> | null = null
 
 function initAudioContext() {
@@ -14,9 +15,21 @@ function initAudioContext() {
   analyser.fftSize = 512
   analyser.smoothingTimeConstant = 0.6
 
-  sourceNode = audioContext.createMediaElementSource(audioElement)
-  sourceNode.connect(analyser)
-  analyser.connect(audioContext.destination)
+  // captureStream() считывает частотные данные без перехвата
+  // вывода аудиоэлемента — звук продолжает воспроизводиться
+  // напрямую через <audio>, что критично для фонового режима
+  if (
+    'captureStream' in audioElement &&
+    typeof (audioElement as any).captureStream === 'function'
+  ) {
+    const stream = (audioElement as any).captureStream() as MediaStream
+    const source = audioContext.createMediaStreamSource(stream)
+    source.connect(analyser)
+    // НЕ подключаем analyser к destination —
+    // аудиоэлемент сам выводит звук
+  }
+  // Если captureStream недоступен (Safari/iOS), визуализатор
+  // работает без частотных данных, но фоновое воспроизведение сохраняется
 
   frequencyData = new Uint8Array(new ArrayBuffer(analyser.frequencyBinCount))
 }
@@ -34,6 +47,16 @@ function getFrequencyData(): Uint8Array {
   return frequencyData
 }
 
+function setupMediaSession(meta?: { title?: string; artist?: string }) {
+  if (!('mediaSession' in navigator)) return
+
+  navigator.mediaSession.metadata = new MediaMetadata({
+    title: meta?.title || 'mscx',
+    artist: meta?.artist || '',
+    album: 'mscx',
+  })
+}
+
 export function useAudio() {
   const src = ref('')
   const playing = ref(false)
@@ -42,6 +65,7 @@ export function useAudio() {
   const ended = ref(false)
 
   let isSeeking = false
+  let mediaSessionHandlersSet = false
 
   watch(src, (newSrc) => {
     if (newSrc) {
@@ -62,10 +86,16 @@ export function useAudio() {
   function onPlay() {
     playing.value = true
     ended.value = false
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'playing'
+    }
   }
 
   function onPause() {
     playing.value = false
+    if ('mediaSession' in navigator) {
+      navigator.mediaSession.playbackState = 'paused'
+    }
   }
 
   function onTimeUpdate() {
@@ -94,9 +124,21 @@ export function useAudio() {
   audioElement.addEventListener('ended', onEnded)
   audioElement.addEventListener('loadedmetadata', onLoadedMetadata)
 
+  // Восстановление AudioContext при возвращении из фона
+  if (typeof document !== 'undefined') {
+    document.addEventListener('visibilitychange', () => {
+      if (
+        !document.hidden &&
+        audioContext?.state === 'suspended' &&
+        playing.value
+      ) {
+        audioContext.resume()
+      }
+    })
+  }
+
   watch(playing, (val) => {
     if (val) {
-      initAudioContext()
       if (audioContext?.state === 'suspended') {
         audioContext.resume()
       }
@@ -134,6 +176,43 @@ export function useAudio() {
     playing.value = !playing.value
   }
 
+  function setTrackMeta(meta: { title?: string; artist?: string }) {
+    setupMediaSession(meta)
+  }
+
+  function setMediaSessionHandlers(handlers: {
+    onNext?: () => void
+    onPrevious?: () => void
+  }) {
+    if (mediaSessionHandlersSet || !('mediaSession' in navigator)) return
+    mediaSessionHandlersSet = true
+
+    navigator.mediaSession.setActionHandler('play', () => {
+      audioElement.play()
+    })
+    navigator.mediaSession.setActionHandler('pause', () => {
+      audioElement.pause()
+    })
+    navigator.mediaSession.setActionHandler('seekto', (details) => {
+      if (details.seekTime != null) {
+        audioElement.currentTime = details.seekTime
+        currentTime.value = details.seekTime
+      }
+    })
+    if (handlers.onNext) {
+      navigator.mediaSession.setActionHandler(
+        'nexttrack',
+        handlers.onNext,
+      )
+    }
+    if (handlers.onPrevious) {
+      navigator.mediaSession.setActionHandler(
+        'previoustrack',
+        handlers.onPrevious,
+      )
+    }
+  }
+
   const analyserNode = computed(() => analyser)
 
   return {
@@ -148,5 +227,7 @@ export function useAudio() {
     play,
     pause,
     togglePlay,
+    setTrackMeta,
+    setMediaSessionHandlers,
   }
 }
