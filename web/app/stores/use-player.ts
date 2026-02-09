@@ -1,4 +1,8 @@
-import { getAllTracksQuery, getPlaylistTracksQuery, getPlaylistByIdQuery } from '~/shared/queries'
+import {
+  getAllTracksQuery,
+  getPlaylistTracksQuery,
+  getPlaylistByIdQuery,
+} from '~/shared/queries'
 import { type Track } from '~/dexie.storage'
 
 export const usePlayer = defineStore('player', () => {
@@ -15,12 +19,15 @@ export const usePlayer = defineStore('player', () => {
     return getAllTracksQuery()
   })
 
-  const currentPlaylist = useDexieLiveQueryWithDeps(currentPlaylistId, (id?: string) => {
-    if (id) {
-      return getPlaylistByIdQuery(id)
-    }
-    return undefined
-  })
+  const currentPlaylist = useDexieLiveQueryWithDeps(
+    currentPlaylistId,
+    (id?: string) => {
+      if (id) {
+        return getPlaylistByIdQuery(id)
+      }
+      return undefined
+    },
+  )
 
   function generateShuffleQueue() {
     if (!tracks.value || tracks.value.length === 0) {
@@ -39,13 +46,19 @@ export const usePlayer = defineStore('player', () => {
     shuffleQueue.value = shuffled
   }
 
-  watch([tracks, shuffle], () => {
-    if (shuffle.value) {
-      generateShuffleQueue()
-    }
-  }, { immediate: true })
+  watch(
+    [tracks, shuffle],
+    () => {
+      if (shuffle.value) {
+        generateShuffleQueue()
+      }
+    },
+    { immediate: true },
+  )
 
-  const shuffledTracks = computed(() => shuffle.value ? shuffleQueue.value : tracks.value)
+  const shuffledTracks = computed(() =>
+    shuffle.value ? shuffleQueue.value : tracks.value,
+  )
 
   const currentTrack = computed(() =>
     tracks.value?.find((t) => t.id === currentTrackId.value),
@@ -64,7 +77,9 @@ export const usePlayer = defineStore('player', () => {
 
   async function switchToNextTrack() {
     if (!shuffledTracks.value) return
-    const index = shuffledTracks.value?.findIndex((t) => t.id === currentTrackId.value)
+    const index = shuffledTracks.value?.findIndex(
+      (t) => t.id === currentTrackId.value,
+    )
     if (index === -1) return
     const nextIndex = (index + 1) % shuffledTracks.value.length
     if (nextIndex === 0 && shuffle.value) {
@@ -77,7 +92,9 @@ export const usePlayer = defineStore('player', () => {
 
   async function switchToPreviousTrack() {
     if (!shuffledTracks.value) return
-    const index = shuffledTracks.value?.findIndex((t) => t.id === currentTrackId.value)
+    const index = shuffledTracks.value?.findIndex(
+      (t) => t.id === currentTrackId.value,
+    )
     if (index === -1) return
     const prevIndex = index === 0 ? shuffledTracks.value.length - 1 : index - 1
     currentTrackId.value = shuffledTracks.value[prevIndex]?.id ?? null
