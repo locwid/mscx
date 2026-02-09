@@ -15,10 +15,9 @@ const openInfo = ref(false)
 </script>
 
 <template>
-  <UModal v-model:open="player.isFullscreenOpen" fullscreen :ui="{ content: 'h-screen w-full max-w-lg mx-auto bg-black rounded-lg shadow-lg ring ring-default flex flex-col focus:outline-none overflow-hidden' }">
+  <UModal v-model:open="player.isFullscreenOpen" fullscreen :ui="{ content: 'h-screen w-full max-w-lg mx-auto bg-black rounded-lg shadow-lg ring ring-default flex flex-col focus:outline-none overflow-hidden rounded-none' }">
     <template #content>
       <div class="relative flex flex-col h-full">
-        <!-- Fullscreen visualizer background -->
         <PlayerVisualizer
           :key="track.id"
           :track-id="track.id"
@@ -26,10 +25,7 @@ const openInfo = ref(false)
           :playing="playing"
           :get-frequency-data="getFrequencyData"
         />
-
-        <!-- UI overlay -->
         <div class="absolute inset-0 flex flex-col p-6 z-10">
-          <!-- Header -->
           <div class="flex justify-between items-center mb-4">
             <div class="text-white/60 text-sm drop-shadow">
               playing {{ player.currentPlaylist?.name || '🎵' }}
@@ -43,21 +39,16 @@ const openInfo = ref(false)
               @click="player.closeFullscreen()"
             />
           </div>
-
-          <!-- Spacer -->
           <div class="flex-1" />
-
-          <!-- Track name -->
-          <div class="w-full mb-8">
+          <div class="flex gap-8 flex-col backdrop-blur-sm bg-black/80 rounded-xl px-4 py-6">
+<div class="w-full">
             <Transition name="fade" mode="out-in">
               <div class="text-center" :key="track.id">
                 <h2 class="text-2xl font-bold truncate text-white drop-shadow-lg">{{ track.name }}</h2>
               </div>
             </Transition>
           </div>
-
-          <!-- Controls -->
-          <div class="w-full backdrop-blur-sm bg-black/20 rounded-xl p-4">
+          <div class="w-full">
             <div class="mb-6">
               <USlider v-model="currentTime" :min="0" :max="duration" />
             </div>
@@ -105,6 +96,7 @@ const openInfo = ref(false)
                 @click="openInfo = true"
               />
             </div>
+          </div>
           </div>
         </div>
       </div>

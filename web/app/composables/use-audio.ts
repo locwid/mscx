@@ -11,8 +11,8 @@ function initAudioContext() {
 
   audioContext = new AudioContext()
   analyser = audioContext.createAnalyser()
-  analyser.fftSize = 256
-  analyser.smoothingTimeConstant = 0.8
+  analyser.fftSize = 512
+  analyser.smoothingTimeConstant = 0.6
 
   sourceNode = audioContext.createMediaElementSource(audioElement)
   sourceNode.connect(analyser)
@@ -23,7 +23,7 @@ function initAudioContext() {
 
 function getFrequencyData(): Uint8Array {
   if (!analyser || !frequencyData) {
-    return new Uint8Array(128)
+    return new Uint8Array(256)
   }
 
   if (audioContext?.state === 'suspended') {
