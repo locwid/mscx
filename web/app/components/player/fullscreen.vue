@@ -11,16 +11,6 @@ const player = usePlayer()
 const audio = inject(AUDIO_INJECTION_KEY)!
 const { playing, currentTime, duration, analyserNode, getFrequencyData } = audio
 
-watch(
-  () => player.isFullscreenOpen,
-  (open) => {
-    if (open) {
-      audio.initAudioContext()
-    }
-  },
-  { immediate: true },
-)
-
 const openInfo = ref(false)
 </script>
 

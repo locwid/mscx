@@ -11,11 +11,6 @@ const { switchToNextTrack } = player
 const audio = useAudio()
 provide(AUDIO_INJECTION_KEY, audio)
 
-audio.setMediaSessionHandlers({
-  onNext: () => switchToNextTrack(),
-  onPrevious: () => player.switchToPreviousTrack(),
-})
-
 const fileSrc = computed(() => {
   const track = currentTrack.value
   if (!track) return ''
@@ -30,15 +25,18 @@ watch(fileSrc, (newSrc) => {
   }
 })
 
-watch(currentTrack, (track) => {
-  if (track) {
-    audio.setTrackMeta({ title: track.name })
-  }
-})
-
 watch(audio.ended, (value) => {
   if (value) switchToNextTrack()
 })
+
+watch(
+  () => audio.playing.value,
+  (isPlaying) => {
+    if (isPlaying) {
+      audio.initAudioContext()
+    }
+  },
+)
 
 onBeforeMount(() => {
   trySyncWithServer()
