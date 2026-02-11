@@ -3,7 +3,6 @@ import type { Track } from '~/dexie.storage'
 import { usePlayer } from '~/stores/use-player'
 import { AUDIO_INJECTION_KEY } from '~/shared/constants/keys'
 import { getTrackVisualParams } from '~/utils/track-visual-params'
-import Avatar from 'vue-boring-avatars'
 
 defineProps<{
   track: Track
@@ -29,9 +28,8 @@ function getTrackColor(trackId: string) {
     @dblclick="handleDoubleClick"
   >
     <Transition name="fade" mode="out-in">
-      <Avatar
+      <div
         :key="track.id"
-        :name="track.id"
         class="w-10 h-10 rounded-full grow-0 shrink-0"
         :style="{ backgroundColor: getTrackColor(track.id) }"
       />

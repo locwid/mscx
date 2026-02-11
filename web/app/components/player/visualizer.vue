@@ -35,19 +35,11 @@ function resizeCanvas() {
 }
 
 let cachedFreqData: Uint8Array | null = null
-let prevFreqData: Uint8Array | null = null
 
 function fetchFrequencyData(): Uint8Array | null {
   if (!props.analyserNode || !props.playing || !props.getFrequencyData) {
     cachedFreqData = null
     return null
-  }
-  // Store previous frame for echo ring
-  if (cachedFreqData) {
-    if (!prevFreqData || prevFreqData.length !== cachedFreqData.length) {
-      prevFreqData = new Uint8Array(cachedFreqData.length)
-    }
-    prevFreqData.set(cachedFreqData)
   }
   cachedFreqData = props.getFrequencyData()
   return cachedFreqData
@@ -76,117 +68,73 @@ function getFrequencyBands(): { bass: number; mid: number; treble: number } {
   }
 }
 
-/**
- * Draw an organic blob shape using bezier curves with oscillating control points.
- * Each blob has unique deformation parameters that evolve over time.
- */
-function drawBlob(
+function drawShape(
   ctx: CanvasRenderingContext2D,
   p: Particle,
   x: number,
   y: number,
   size: number,
-  t: number,
-  energy: number,
 ) {
-  const n = p.blobPoints
-  const points: { px: number; py: number }[] = []
-
-  for (let i = 0; i < n; i++) {
-    const baseAngle = (i / n) * Math.PI * 2
-    // Oscillating radius for organic deformation
-    const osc =
-      Math.sin(t * 0.001 * p.blobSpeeds[i]! + p.blobPhases[i]!) * 0.25
-    const energyDeform = energy * 0.15 * Math.sin(t * 0.003 + i * 1.7)
-    const r = size * (p.blobOffsets[i]! + osc + energyDeform)
-    points.push({
-      px: Math.cos(baseAngle) * r,
-      py: Math.sin(baseAngle) * r,
-    })
-  }
-
   ctx.save()
   ctx.translate(x, y)
   ctx.rotate(p.rotation)
 
-  ctx.beginPath()
-  // Start from midpoint between last and first point
-  const lastPt = points[n - 1]!
-  const firstPt = points[0]!
-  ctx.moveTo(
-    (lastPt.px + firstPt.px) / 2,
-    (lastPt.py + firstPt.py) / 2,
-  )
+  switch (p.shape) {
+    case 'circle':
+      ctx.beginPath()
+      ctx.arc(0, 0, size, 0, Math.PI * 2)
+      ctx.fill()
+      break
 
-  for (let i = 0; i < n; i++) {
-    const curr = points[i]!
-    const next = points[(i + 1) % n]!
-    const midX = (curr.px + next.px) / 2
-    const midY = (curr.py + next.py) / 2
-    ctx.quadraticCurveTo(curr.px, curr.py, midX, midY)
+    case 'ring':
+      ctx.lineWidth = size * 0.3
+      ctx.beginPath()
+      ctx.arc(0, 0, size, 0, Math.PI * 2)
+      ctx.stroke()
+      break
+
+    case 'triangle': {
+      const h = size * 1.7
+      ctx.beginPath()
+      ctx.moveTo(0, -h / 2)
+      ctx.lineTo(-size, h / 2)
+      ctx.lineTo(size, h / 2)
+      ctx.closePath()
+      ctx.fill()
+      break
+    }
+
+    case 'diamond': {
+      const s = size * 1.4
+      ctx.beginPath()
+      ctx.moveTo(0, -s)
+      ctx.lineTo(s * 0.6, 0)
+      ctx.lineTo(0, s)
+      ctx.lineTo(-s * 0.6, 0)
+      ctx.closePath()
+      ctx.fill()
+      break
+    }
+
+    case 'line': {
+      const len = size * 3
+      ctx.lineWidth = size * 0.4
+      ctx.lineCap = 'round'
+      ctx.beginPath()
+      ctx.moveTo(-len / 2, 0)
+      ctx.lineTo(len / 2, 0)
+      ctx.stroke()
+      break
+    }
+
+    case 'dot':
+      ctx.beginPath()
+      ctx.arc(0, 0, size, 0, Math.PI * 2)
+      ctx.fill()
+      break
   }
-
-  ctx.closePath()
-  ctx.fill()
 
   ctx.restore()
-}
-
-/**
- * Draw a smooth frequency ring using quadratic curves.
- * Bass at bottom (6 o'clock), treble at top (12 o'clock), sequential (no mirroring).
- */
-function drawFrequencyRing(
-  ctx: CanvasRenderingContext2D,
-  data: Uint8Array,
-  cx: number,
-  cy: number,
-  ringRadius: number,
-  startAngle: number,
-  alpha: number,
-  lineWidth: number,
-  color: string,
-) {
-  const binCount = data.length
-  // Use fewer points than bins for smoother curves, but enough for detail
-  const pointCount = Math.min(binCount, 128)
-  const sliceAngle = (Math.PI * 2) / pointCount
-
-  ctx.globalAlpha = alpha
-  ctx.strokeStyle = color
-  ctx.lineWidth = lineWidth
-
-  // Pre-compute ring points
-  const ringPoints: { rx: number; ry: number }[] = []
-  for (let i = 0; i < pointCount; i++) {
-    const binIdx = Math.floor((i / pointCount) * binCount)
-    const binNext = Math.min(binIdx + 1, binCount - 1)
-    const frac = ((i / pointCount) * binCount) - binIdx
-    const rawVal = (data[binIdx]! * (1 - frac) + data[binNext]! * frac) / 255
-    // Non-linear: boost quiet, compress loud for more dynamic feel
-    const val = Math.pow(rawVal, 0.65)
-    const r = ringRadius + val * ringRadius * 1.2
-    const a = startAngle + i * sliceAngle
-    ringPoints.push({
-      rx: cx + Math.cos(a) * r,
-      ry: cy + Math.sin(a) * r,
-    })
-  }
-
-  // Draw smooth closed curve through ring points using quadratic bezier
-  ctx.beginPath()
-  const last = ringPoints[pointCount - 1]!
-  const first = ringPoints[0]!
-  ctx.moveTo((last.rx + first.rx) / 2, (last.ry + first.ry) / 2)
-
-  for (let i = 0; i < pointCount; i++) {
-    const curr = ringPoints[i]!
-    const next = ringPoints[(i + 1) % pointCount]!
-    ctx.quadraticCurveTo(curr.rx, curr.ry, (curr.rx + next.rx) / 2, (curr.ry + next.ry) / 2)
-  }
-
-  ctx.closePath()
-  ctx.stroke()
 }
 
 function drawFrame() {
@@ -258,11 +206,12 @@ function drawFrame() {
     const x = p.x * w + Math.cos(p.angle) * effectiveOrbit * diag * 0.25
     const y = p.y * h + Math.sin(p.angle) * effectiveOrbit * diag * 0.25
 
-    // Glow — larger, softer blob
+    // Glow
     const glowSize = (p.size * 3.5 + energy * 12) * dpr
     ctx.globalAlpha = 0.1 + energy * 0.2
     ctx.fillStyle = params.glowColors[p.colorIndex]!
-    drawBlob(ctx, p, x, y, glowSize, time, energy)
+    ctx.strokeStyle = params.glowColors[p.colorIndex]!
+    drawShape(ctx, { ...p, shape: 'circle' } as Particle, x, y, glowSize)
   }
 
   // === SHARP PARTICLE LAYER ===
@@ -285,7 +234,8 @@ function drawFrame() {
 
     ctx.globalAlpha = alpha
     ctx.fillStyle = params.colors[p.colorIndex]!
-    drawBlob(ctx, p, x, y, particleSize, time, energy)
+    ctx.strokeStyle = params.colors[p.colorIndex]!
+    drawShape(ctx, p, x, y, particleSize)
   }
 
   // === CENTER GLOW ===
@@ -305,52 +255,47 @@ function drawFrame() {
 
   // === FREQUENCY RING ===
   if (props.playing && cachedFreqData) {
+    const data = cachedFreqData
     const ringRadius = Math.min(w, h) * 0.22
-    // Bass at bottom (π/2), treble at top, slow drift rotation
-    const startAngle = Math.PI / 2 + time * 0.0002
+    // Mirror spectrum: bass at top, treble at bottom, symmetric left/right
+    const binCount = data.length
+    const pointCount = binCount
+    const sliceAngle = (Math.PI * 2) / pointCount
 
     ctx.globalCompositeOperation = 'screen'
+    ctx.globalAlpha = 0.2 + bands.mid * 0.25
+    ctx.strokeStyle = params.colors[2 % params.colors.length]!
+    ctx.lineWidth = 2 * dpr
 
-    // Echo ring (previous frame data) — inner, dimmer
-    if (prevFreqData) {
-      drawFrequencyRing(
-        ctx,
-        prevFreqData,
-        cx,
-        cy,
-        ringRadius * 0.85,
-        startAngle,
-        0.12 + bands.bass * 0.1,
-        4 * dpr,
-        params.colors[3 % params.colors.length]!,
-      )
+    ctx.beginPath()
+    for (let i = 0; i < pointCount; i++) {
+      // Map: first half goes clockwise (right side), second half mirrors (left side)
+      // So bin 0 (bass) is at top, bin N/2 (treble) is at bottom
+      let binIdx: number
+      if (i < pointCount / 2) {
+        binIdx = i * 2 // right side: 0..N ascending
+      } else {
+        binIdx = (pointCount - 1 - i) * 2 // left side: mirror
+      }
+      binIdx = Math.min(binIdx, binCount - 1)
+
+      const val0 = data[binIdx]! / 255
+      const val1 = (data[Math.min(binIdx + 1, binCount - 1)]!) / 255
+      const val = (val0 + val1) / 2
+      const r = ringRadius + val * ringRadius * 0.8
+      const a = i * sliceAngle - Math.PI / 2
+      const rx = cx + Math.cos(a) * r
+      const ry = cy + Math.sin(a) * r
+      if (i === 0) ctx.moveTo(rx, ry)
+      else ctx.lineTo(rx, ry)
     }
-
-    // Main ring — outer, brighter
-    drawFrequencyRing(
-      ctx,
-      cachedFreqData,
-      cx,
-      cy,
-      ringRadius,
-      startAngle,
-      0.3 + bands.mid * 0.4,
-      2 * dpr,
-      params.colors[2 % params.colors.length]!,
-    )
+    ctx.closePath()
+    ctx.stroke()
 
     // Inner glow ring
-    drawFrequencyRing(
-      ctx,
-      cachedFreqData,
-      cx,
-      cy,
-      ringRadius,
-      startAngle,
-      0.1 + bands.bass * 0.18,
-      6 * dpr,
-      params.colors[2 % params.colors.length]!,
-    )
+    ctx.globalAlpha = 0.08 + bands.bass * 0.15
+    ctx.lineWidth = 6 * dpr
+    ctx.stroke()
   }
 
   ctx.globalAlpha = 1
@@ -363,7 +308,6 @@ function drawFrame() {
 function initParticles(trackId: string) {
   params = getTrackVisualParams(trackId)
   particles = createParticles(params)
-  prevFreqData = null
 }
 
 function startAnimation() {
