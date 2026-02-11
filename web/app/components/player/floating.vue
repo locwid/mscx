@@ -1,24 +1,31 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
+import Avatar from 'vue-boring-avatars'
+import { useTrackFile } from '~/composables/use-track-file'
 import { usePlayer } from '~/stores/use-player'
-import { AUDIO_INJECTION_KEY } from '~/shared/constants/keys'
-import { getTrackVisualParams } from '~/utils/track-visual-params'
 
-defineProps<{
+const emit = defineEmits<{
+  (e: 'ended'): void
+}>()
+
+const props = defineProps<{
   track: Track
 }>()
 
 const player = usePlayer()
-const audio = inject(AUDIO_INJECTION_KEY)!
-const { playing, currentTime, duration } = audio
+const fileSrc = useTrackFile(() => props.track)
+
+const audioRef = useTemplateRef('audio')
+const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
+  src: fileSrc,
+})
+
+watch(ended, (value) => {
+  if (value) emit('ended')
+})
 
 function handleDoubleClick() {
   player.openFullscreen()
-}
-
-function getTrackColor(trackId: string) {
-  const params = getTrackVisualParams(trackId)
-  return params.colors[0]
 }
 </script>
 
@@ -28,11 +35,7 @@ function getTrackColor(trackId: string) {
     @dblclick="handleDoubleClick"
   >
     <Transition name="fade" mode="out-in">
-      <div
-        :key="track.id"
-        class="w-10 h-10 rounded-full grow-0 shrink-0"
-        :style="{ backgroundColor: getTrackColor(track.id) }"
-      />
+      <Avatar :key="track.id" :name="track.id" class="grow-0 shrink-0" />
     </Transition>
     <Transition name="fade" mode="out-in">
       <div
@@ -43,6 +46,7 @@ function getTrackColor(trackId: string) {
           {{ track.name }}
         </div>
         <div>
+          <audio ref="audio" preload="metadata" autoplay />
           <USlider v-model="currentTime" size="sm" :min="0" :max="duration" />
         </div>
       </div>
