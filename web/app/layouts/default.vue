@@ -58,7 +58,10 @@ onBeforeUnmount(() => {
         :track="currentTrack"
       />
     </Transition>
-    <PlayerFullscreen v-if="currentTrack" :track="currentTrack" />
+    <PlayerFullscreen
+      v-if="currentTrack"
+      :track="currentTrack"
+    />
   </div>
 </template>
 

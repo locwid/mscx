@@ -112,7 +112,7 @@ export function createParticles(params: TrackVisualParams): Particle[] {
 
     for (let j = 0; j < blobPoints; j++) {
       blobOffsets.push(0.7 + rng() * 0.6) // 0.7–1.3
-      blobSpeeds.push(0.3 + rng() * 1.2) // 0.3–1.5
+      blobSpeeds.push(0.3 + rng() * 1.2)  // 0.3–1.5
       blobPhases.push(rng() * Math.PI * 2)
     }
 

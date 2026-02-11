@@ -48,14 +48,11 @@ export function useAudio() {
       ended.value = false
       audioElement.src = newSrc
       audioElement.load()
-      audioElement
-        .play()
-        .then(() => {
-          playing.value = true
-        })
-        .catch(() => {
-          playing.value = false
-        })
+      audioElement.play().then(() => {
+        playing.value = true
+      }).catch(() => {
+        playing.value = false
+      })
     }
   })
 

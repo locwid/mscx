@@ -95,7 +95,8 @@ function drawBlob(
   for (let i = 0; i < n; i++) {
     const baseAngle = (i / n) * Math.PI * 2
     // Oscillating radius for organic deformation
-    const osc = Math.sin(t * 0.001 * p.blobSpeeds[i]! + p.blobPhases[i]!) * 0.25
+    const osc =
+      Math.sin(t * 0.001 * p.blobSpeeds[i]! + p.blobPhases[i]!) * 0.25
     const energyDeform = energy * 0.15 * Math.sin(t * 0.003 + i * 1.7)
     const r = size * (p.blobOffsets[i]! + osc + energyDeform)
     points.push({
@@ -112,7 +113,10 @@ function drawBlob(
   // Start from midpoint between last and first point
   const lastPt = points[n - 1]!
   const firstPt = points[0]!
-  ctx.moveTo((lastPt.px + firstPt.px) / 2, (lastPt.py + firstPt.py) / 2)
+  ctx.moveTo(
+    (lastPt.px + firstPt.px) / 2,
+    (lastPt.py + firstPt.py) / 2,
+  )
 
   for (let i = 0; i < n; i++) {
     const curr = points[i]!
@@ -157,7 +161,7 @@ function drawFrequencyRing(
   for (let i = 0; i < pointCount; i++) {
     const binIdx = Math.floor((i / pointCount) * binCount)
     const binNext = Math.min(binIdx + 1, binCount - 1)
-    const frac = (i / pointCount) * binCount - binIdx
+    const frac = ((i / pointCount) * binCount) - binIdx
     const rawVal = (data[binIdx]! * (1 - frac) + data[binNext]! * frac) / 255
     // Non-linear: boost quiet, compress loud for more dynamic feel
     const val = Math.pow(rawVal, 0.65)
@@ -178,12 +182,7 @@ function drawFrequencyRing(
   for (let i = 0; i < pointCount; i++) {
     const curr = ringPoints[i]!
     const next = ringPoints[(i + 1) % pointCount]!
-    ctx.quadraticCurveTo(
-      curr.rx,
-      curr.ry,
-      (curr.rx + next.rx) / 2,
-      (curr.ry + next.ry) / 2,
-    )
+    ctx.quadraticCurveTo(curr.rx, curr.ry, (curr.rx + next.rx) / 2, (curr.ry + next.ry) / 2)
   }
 
   ctx.closePath()
@@ -251,7 +250,8 @@ function drawFrame() {
     if (p.y > 1.1) p.y = -0.1
 
     const radiusOsc =
-      Math.sin(time * 0.001 * p.radiusOscSpeed + p.phaseOffset) * p.radiusOscAmp
+      Math.sin(time * 0.001 * p.radiusOscSpeed + p.phaseOffset) *
+      p.radiusOscAmp
     const energyPush = energy * 0.12
     const effectiveOrbit = (p.orbitRadius + radiusOsc + energyPush) * breathe
 
@@ -272,7 +272,8 @@ function drawFrame() {
     const energy = props.playing ? bandValue : 0
 
     const radiusOsc =
-      Math.sin(time * 0.001 * p.radiusOscSpeed + p.phaseOffset) * p.radiusOscAmp
+      Math.sin(time * 0.001 * p.radiusOscSpeed + p.phaseOffset) *
+      p.radiusOscAmp
     const energyPush = energy * 0.12
     const effectiveOrbit = (p.orbitRadius + radiusOsc + energyPush) * breathe
 
@@ -418,5 +419,8 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <canvas ref="canvas" class="absolute inset-0 w-full h-full" />
+  <canvas
+    ref="canvas"
+    class="absolute inset-0 w-full h-full"
+  />
 </template>
