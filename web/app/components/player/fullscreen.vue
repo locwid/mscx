@@ -1,28 +1,16 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
-import { useTrackFile } from '~/composables/use-track-file'
+import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { usePlayer } from '~/stores/use-player'
-
-const emit = defineEmits<{
-  (e: 'ended'): void
-}>()
 
 const props = defineProps<{
   track: Track
 }>()
 
 const player = usePlayer()
-const fileSrc = useTrackFile(() => props.track)
-
-const audioRef = useTemplateRef('audio')
-const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
-  src: fileSrc,
-})
-
-watch(ended, (value) => {
-  if (value) emit('ended')
-})
+const audioPlayer = inject(AUDIO_PLAYER_KEY)!
+const { playing, currentTime, duration } = audioPlayer
 
 const openInfo = ref(false)
 </script>
@@ -56,7 +44,6 @@ const openInfo = ref(false)
         </div>
         <div class="w-full">
           <div class="mb-8">
-            <audio ref="audio" preload="metadata" autoplay />
             <USlider v-model="currentTime" :min="0" :max="duration" />
           </div>
           <div class="flex justify-between items-center gap-4">
