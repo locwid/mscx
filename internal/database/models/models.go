@@ -12,6 +12,7 @@ type Track struct {
 	Size      uint      `json:"size"`
 	Duration  uint      `json:"duration"`
 	Type      string    `json:"type"`
+	YoutubeID string    `json:"youtubeId" gorm:"uniqueIndex"`
 	CreatedAt time.Time `json:"createdAt"`
 }
 

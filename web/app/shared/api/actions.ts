@@ -2,6 +2,7 @@ import { apiFetch } from './fetch'
 import type {
   CreatePlaylistPayload,
   CreateTrackPayload,
+  ImportYouTubePayload,
   PlaylistResponse,
   TrackResponse,
 } from './types'
@@ -47,6 +48,13 @@ export const apiCreatePlaylist = (payload: CreatePlaylistPayload) => {
 
 export const apiDeletePlaylist = (id: string) => {
   return apiFetch(`/playlist/${id}`, { method: 'DELETE' })
+}
+
+export const apiImportYouTube = (payload: ImportYouTubePayload) => {
+  return apiFetch('/import/youtube', {
+    method: 'POST',
+    body: payload,
+  })
 }
 
 export const apiAddTrackToPlaylist = (playlistId: string, trackId: string) => {

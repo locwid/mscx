@@ -48,6 +48,11 @@ func main() {
 	track.DELETE("/:id", trackController.Delete)
 	track.GET("/:id/file", trackController.GetFile)
 
+	youtubeService := service.MakeYoutubeService(db)
+	importController := controller.MakeImportController(youtubeService)
+	importGroup := api.Group("/import")
+	importGroup.POST("/youtube", importController.ImportFromYoutube)
+
 	playlistService := service.MakePlaylistService(db)
 	playlistController := controller.MakePlaylistContoller(playlistService)
 	playlist := api.Group("/playlist")

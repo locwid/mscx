@@ -11,6 +11,7 @@ type CreateTrackDTO struct {
 	Size      uint                  `form:"size" validate:"required"`
 	Duration  uint                  `form:"duration" validate:"required"`
 	Type      string                `form:"type" validate:"required"`
+	YoutubeID string                `form:"youtubeId"`
 	File      *multipart.FileHeader `form:"file" validate:"required"`
 	CreatedAt time.Time             `form:"createdAt" validate:"required"`
 }

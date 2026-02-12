@@ -13,6 +13,7 @@ type Config struct {
 	port        string
 	dataFolder  string
 	filesFolder string
+	tempFolder  string
 	dbName      string
 	authKey     string
 }
@@ -39,6 +40,7 @@ func InitConfig() {
 		dataFolder:  dataFolder,
 		authKey:     authKey,
 		filesFolder: "files",
+		tempFolder:  "temp",
 		dbName:      "data.db",
 	}
 
@@ -57,6 +59,14 @@ func InitConfig() {
 			panic("Failed to create files folder")
 		}
 	}
+
+	exists, _ = dirExsists(filepath.Join(cfg.dataFolder, cfg.tempFolder))
+	if !exists {
+		err := os.Mkdir(filepath.Join(cfg.dataFolder, cfg.tempFolder), folderPermission)
+		if err != nil {
+			panic("Failed to create temp folder")
+		}
+	}
 }
 
 func GetAuthKey() string {
@@ -69,6 +79,10 @@ func GetPort() string {
 
 func GetFilesDir() string {
 	return filepath.Join(cfg.dataFolder, cfg.filesFolder)
+}
+
+func GetTempDir() string {
+	return filepath.Join(cfg.dataFolder, cfg.tempFolder)
 }
 
 func GetFilePath(filename string) string {

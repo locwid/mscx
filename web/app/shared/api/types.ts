@@ -30,3 +30,7 @@ export interface CreatePlaylistPayload {
   name: string
   createdAt: string
 }
+
+export interface ImportYouTubePayload {
+  url: string
+}

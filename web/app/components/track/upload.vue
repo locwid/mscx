@@ -1,50 +1,34 @@
 <script lang="ts" setup>
-import type { FormSubmitEvent } from '@nuxt/ui'
-import z from 'zod'
-import { addTracksQuery } from '~/shared/queries'
-
-const schema = z.object({
-  files: z.file().array().min(1),
-})
-
-type Schema = z.infer<typeof schema>
-
-const state = reactive<Schema>({
-  files: [],
-})
+import type { TabsItem } from '@nuxt/ui';
 
 const open = ref(false)
 
-const onSubmit = async (event: FormSubmitEvent<Schema>) => {
-  await addTracksQuery(event.data.files)
-  open.value = false
-}
+const items = [
+  {
+    label: 'files',
+    description: 'upload your tracks by manually selecting them from your device',
+    slot: 'files' as const
+  },
+  {
+    label: 'youtube',
+    description: 'upload tracks by youtube playlist url',
+    slot: 'youtube' as const
+  }
+] satisfies TabsItem[]
 </script>
 
 <template>
   <UDrawer v-model:open="open" title="upload tracks">
     <slot />
     <template #body>
-      <UForm
-        class="space-y-4"
-        :state="state"
-        :schema="schema"
-        @submit="onSubmit"
-      >
-        <UFormField label="files" name="files">
-          <UFileUpload
-            v-model="state.files"
-            multiple
-            layout="list"
-            class="w-full min-h-48"
-            label="select images to upload"
-            accept="audio/*"
-          />
-        </UFormField>
-        <div>
-          <UButton block size="xl" type="submit">upload</UButton>
-        </div>
-      </UForm>
+      <UTabs :items="items">
+        <template #files>
+          <TrackUploadFiles @submit="open = false" />
+        </template>
+        <template #youtube>
+          <TrackUploadYoutube @submit="open = false" />
+        </template>
+      </UTabs>
     </template>
   </UDrawer>
 </template>

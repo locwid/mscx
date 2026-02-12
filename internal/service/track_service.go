@@ -34,6 +34,7 @@ func (s *trackService) CreateTrack(payload dto.CreateTrackDTO) (*models.Track, e
 		Size:      payload.Size,
 		Duration:  payload.Duration,
 		Type:      payload.Type,
+		YoutubeID: payload.YoutubeID,
 		CreatedAt: payload.CreatedAt,
 	}
 
