@@ -4,9 +4,8 @@ import (
 	"net/http"
 
 	"github.com/labstack/echo/v5"
-	"github.com/locwid/mscx/internal/database/models"
 	"github.com/locwid/mscx/internal/dto"
-	"gorm.io/gorm"
+	"github.com/locwid/mscx/internal/service"
 )
 
 type PlaylistController interface {
@@ -18,11 +17,11 @@ type PlaylistController interface {
 }
 
 type playlistController struct {
-	db *gorm.DB
+	playlistService service.PlaylistService
 }
 
-func MakePlaylistContoller(db *gorm.DB) PlaylistController {
-	return playlistController{db}
+func MakePlaylistContoller(playlistService service.PlaylistService) PlaylistController {
+	return playlistController{playlistService}
 }
 
 // AddTrack implements [PlaylistController].
@@ -32,9 +31,9 @@ func (p playlistController) AddTrack(c *echo.Context) error {
 	if err != nil {
 		return echo.ErrBadRequest.Wrap(err)
 	}
-	err = p.db.Model(&models.Playlist{ID: id}).Association("Tracks").Append(&models.Track{ID: trackId})
+	err = p.playlistService.AddTrackToPlaylist(id, trackId)
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -46,9 +45,9 @@ func (p playlistController) DeleteTrack(c *echo.Context) error {
 	if err != nil {
 		return echo.ErrBadRequest.Wrap(err)
 	}
-	err = p.db.Model(&models.Playlist{ID: id}).Association("Tracks").Delete(&models.Track{ID: trackId})
+	err = p.playlistService.RemoveTrackFromPlaylist(id, trackId)
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 	return c.NoContent(http.StatusOK)
 }
@@ -60,13 +59,9 @@ func (p playlistController) Create(c *echo.Context) error {
 		return echo.ErrBadRequest.Wrap(err)
 	}
 
-	playlist := models.Playlist{
-		ID:   payload.ID,
-		Name: payload.Name,
-	}
-	err := gorm.G[models.Playlist](p.db).Create(c.Request().Context(), &playlist)
+	playlist, err := p.playlistService.CreatePlaylist(*payload)
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, playlist)
@@ -80,9 +75,9 @@ func (p playlistController) Delete(c *echo.Context) error {
 		return echo.ErrBadRequest.Wrap(err)
 	}
 
-	_, err = gorm.G[models.Playlist](p.db).Where("id = ?", id).Delete(c.Request().Context())
+	err = p.playlistService.DeletePlaylist(id)
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -90,9 +85,9 @@ func (p playlistController) Delete(c *echo.Context) error {
 
 // GetList implements [PlaylistController].
 func (p playlistController) GetList(c *echo.Context) error {
-	playlists, err := gorm.G[models.Playlist](p.db).Preload("Tracks", nil).Find(c.Request().Context())
+	playlists, err := p.playlistService.GetPlaylists()
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 	return c.JSON(http.StatusOK, playlists)
 }

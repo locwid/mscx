@@ -2,16 +2,12 @@ package controller
 
 import (
 	"errors"
-	"io"
 	"net/http"
-	"os"
 
 	"github.com/labstack/echo/v5"
-	"github.com/locwid/mscx/internal/config"
-	"github.com/locwid/mscx/internal/database/models"
 	"github.com/locwid/mscx/internal/dto"
+	"github.com/locwid/mscx/internal/service"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 )
 
 type TrackController interface {
@@ -22,11 +18,11 @@ type TrackController interface {
 }
 
 type trackController struct {
-	db *gorm.DB
+	trackService service.TrackService
 }
 
-func MakeTrackController(db *gorm.DB) TrackController {
-	return trackController{db}
+func MakeTrackController(trackService service.TrackService) TrackController {
+	return trackController{trackService}
 }
 
 // GetFile implements [TrackController].
@@ -37,7 +33,7 @@ func (t trackController) GetFile(c *echo.Context) error {
 		return echo.ErrBadRequest.Wrap(err)
 	}
 
-	track, err := gorm.G[models.Track](t.db).Where("id = ?", id).First(c.Request().Context())
+	filePath, err := t.trackService.GetTrackFilePath(id)
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return echo.ErrNotFound
@@ -45,7 +41,7 @@ func (t trackController) GetFile(c *echo.Context) error {
 		return echo.ErrInternalServerError.Wrap(err)
 	}
 
-	return c.File(config.GetFilePath(track.GetFilename()))
+	return c.File(filePath)
 }
 
 // Create implements [TrackController].
@@ -58,32 +54,9 @@ func (t trackController) Create(c *echo.Context) error {
 		return echo.ErrBadRequest.Wrap(err)
 	}
 
-	track := models.Track{
-		ID:        payload.ID,
-		Name:      payload.Name,
-		Size:      payload.Size,
-		Duration:  payload.Duration,
-		Type:      payload.Type,
-		CreatedAt: payload.CreatedAt,
-	}
-
-	t.db.Clauses(clause.OnConflict{
-		UpdateAll: true,
-	}).Create(&track)
-
-	src, err := payload.File.Open()
+	track, err := t.trackService.CreateTrack(*payload)
 	if err != nil {
-		return echo.ErrInternalServerError
-	}
-	defer src.Close()
-
-	dst, err := os.Create(config.GetFilePath(track.GetFilename()))
-	if err != nil {
-		return echo.ErrInternalServerError
-	}
-
-	if _, err = io.Copy(dst, src); err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 
 	return c.JSON(http.StatusOK, track)
@@ -94,22 +67,12 @@ func (t trackController) Delete(c *echo.Context) error {
 	var id string
 	err := echo.PathValuesBinder(c).String("id", &id).BindError()
 	if err != nil {
-		return echo.ErrBadRequest
-	}
-	ctx := c.Request().Context()
-	track, err := gorm.G[models.Track](t.db).Where("id = ?", id).First(ctx)
-	if err != nil {
-		return c.NoContent(http.StatusOK)
+		return echo.ErrBadRequest.Wrap(err)
 	}
 
-	_, err = gorm.G[models.Track](t.db).Where("id = ?", id).Delete(ctx)
+	err = t.trackService.DeleteTrack(id)
 	if err != nil {
-		return echo.ErrInternalServerError
-	}
-
-	err = os.Remove(config.GetFilePath(track.GetFilename()))
-	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 
 	return c.NoContent(http.StatusOK)
@@ -117,9 +80,9 @@ func (t trackController) Delete(c *echo.Context) error {
 
 // GetList implements [TrackController].
 func (t trackController) GetList(c *echo.Context) error {
-	tracks, err := gorm.G[models.Track](t.db).Find(c.Request().Context())
+	tracks, err := t.trackService.GetTracks()
 	if err != nil {
-		return echo.ErrInternalServerError
+		return echo.ErrInternalServerError.Wrap(err)
 	}
 	return c.JSON(http.StatusOK, tracks)
 }

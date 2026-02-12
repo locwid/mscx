@@ -14,6 +14,7 @@ import (
 	"github.com/locwid/mscx/internal/config"
 	"github.com/locwid/mscx/internal/controller"
 	"github.com/locwid/mscx/internal/database"
+	"github.com/locwid/mscx/internal/service"
 	"github.com/locwid/mscx/internal/utils"
 )
 
@@ -39,14 +40,16 @@ func main() {
 		},
 	}))
 
-	trackController := controller.MakeTrackController(db)
+	trackService := service.MakeTrackService(db)
+	trackController := controller.MakeTrackController(trackService)
 	track := api.Group("/track")
 	track.GET("", trackController.GetList)
 	track.POST("", trackController.Create)
 	track.DELETE("/:id", trackController.Delete)
 	track.GET("/:id/file", trackController.GetFile)
 
-	playlistController := controller.MakePlaylistContoller(db)
+	playlistService := service.MakePlaylistService(db)
+	playlistController := controller.MakePlaylistContoller(playlistService)
 	playlist := api.Group("/playlist")
 	playlist.GET("", playlistController.GetList)
 	playlist.POST("", playlistController.Create)
