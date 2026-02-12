@@ -23,17 +23,18 @@ onBeforeUnmount(() => {
   <div class="max-w-lg h-lvh overflow-hidden mx-auto shadow bg-default">
     <TheHeader />
     <slot />
-    <audio :ref="(el) => audioPlayer.audioRef.value = el as HTMLAudioElement" preload="metadata" autoplay />
+    <audio
+      :ref="(el) => (audioPlayer.audioRef.value = el as HTMLAudioElement)"
+      preload="metadata"
+      autoplay
+    />
     <Transition name="slide-up">
       <PlayerFloating
         v-if="currentTrack && !isFullscreenOpen"
         :track="currentTrack"
       />
     </Transition>
-    <PlayerFullscreen
-      v-if="currentTrack"
-      :track="currentTrack"
-    />
+    <PlayerFullscreen v-if="currentTrack" :track="currentTrack" />
   </div>
 </template>
 

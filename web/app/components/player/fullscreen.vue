@@ -16,13 +16,23 @@ const openInfo = ref(false)
 </script>
 
 <template>
-  <UModal v-model:open="player.isFullscreenOpen" fullscreen :ui="{ content: 'h-screen w-full max-w-lg mx-auto bg-default rounded-lg shadow-lg ring ring-default flex flex-col focus:outline-none' }">
+  <UModal
+    v-model:open="player.isFullscreenOpen"
+    fullscreen
+    :ui="{
+      content:
+        'h-screen w-full max-w-lg mx-auto bg-default rounded-lg shadow-lg ring ring-default flex flex-col focus:outline-none',
+    }"
+  >
     <template #content>
       <div class="relative flex flex-col h-full px-6 py-8 overflow-hidden">
         <PlayerVisualizer :track-id="track.id" :playing="playing" />
         <div class="relative z-10 flex justify-between items-center mb-4">
           <div class="text-muted text-lg">
-            playing <span class="text-primary">{{ player.currentPlaylist?.name || 'mscx' }}</span>
+            playing
+            <span class="text-primary">{{
+              player.currentPlaylist?.name || 'mscx'
+            }}</span>
           </div>
           <UButton
             variant="link"

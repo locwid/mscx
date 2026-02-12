@@ -6,7 +6,9 @@ export type AudioGraph = {
 
 const graphByElement = new WeakMap<HTMLAudioElement, AudioGraph>()
 
-export function getOrCreateAudioGraph(audioElement: HTMLAudioElement): AudioGraph {
+export function getOrCreateAudioGraph(
+  audioElement: HTMLAudioElement,
+): AudioGraph {
   const existing = graphByElement.get(audioElement)
   if (existing) return existing
 

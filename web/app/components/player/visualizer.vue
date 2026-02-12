@@ -42,10 +42,15 @@ function drawFrame(shouldSample: boolean) {
   }
 
   const timeNow = performance.now()
-  const deltaMs = lastFrameTime === 0 ? 16 : Math.max(0, timeNow - lastFrameTime)
+  const deltaMs =
+    lastFrameTime === 0 ? 16 : Math.max(0, timeNow - lastFrameTime)
   lastFrameTime = timeNow
 
-  const context = resizeCanvasForDPR(canvas, root.clientWidth, root.clientHeight)
+  const context = resizeCanvasForDPR(
+    canvas,
+    root.clientWidth,
+    root.clientHeight,
+  )
   if (!context) return
 
   const graph = audioPlayer.getAudioGraph()
@@ -117,30 +122,39 @@ onBeforeUnmount(() => {
   resizeObserver = null
 })
 
-watch(() => props.trackId, () => {
-  lastFrequencies = null
-  frameState = null
-  lastFrameTime = 0
-  drawFrame(false)
-  if (props.playing) {
-    startLoop()
-  }
-})
+watch(
+  () => props.trackId,
+  () => {
+    lastFrequencies = null
+    frameState = null
+    lastFrameTime = 0
+    drawFrame(false)
+    if (props.playing) {
+      startLoop()
+    }
+  },
+)
 
-watch(() => props.playing, (isPlaying) => {
-  if (isPlaying) {
-    void audioPlayer.resumeAudioContext()
-    startLoop()
-    return
-  }
+watch(
+  () => props.playing,
+  (isPlaying) => {
+    if (isPlaying) {
+      void audioPlayer.resumeAudioContext()
+      startLoop()
+      return
+    }
 
-  stopLoop()
-  drawFrame(false)
-})
+    stopLoop()
+    drawFrame(false)
+  },
+)
 </script>
 
 <template>
-  <div ref="rootRef" class="absolute inset-0 pointer-events-none overflow-hidden">
+  <div
+    ref="rootRef"
+    class="absolute inset-0 pointer-events-none overflow-hidden"
+  >
     <canvas ref="canvasRef" class="h-full w-full" />
   </div>
 </template>

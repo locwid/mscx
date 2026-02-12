@@ -71,7 +71,11 @@ export function createVisualizerFrameState(
   }
 }
 
-export function resizeCanvasForDPR(canvas: HTMLCanvasElement, width: number, height: number) {
+export function resizeCanvasForDPR(
+  canvas: HTMLCanvasElement,
+  width: number,
+  height: number,
+) {
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   const nextWidth = Math.max(1, Math.floor(width * dpr))
   const nextHeight = Math.max(1, Math.floor(height * dpr))
@@ -151,20 +155,37 @@ export function drawDuplicatedFrequencyRings(
   if (options.animate) {
     const attack = Math.max(0, dynamics.low - state.previousLowEnergy)
     state.beatPulse = clamp01(state.beatPulse * 0.82 + attack * 2.8)
-    state.beatRotation = fract(state.beatRotation + attack * 0.058 + state.beatPulse * 0.008)
-    state.linearRotation = fract(state.linearRotation + options.deltaMs * 0.0000014)
-    state.previousLowEnergy = state.previousLowEnergy * 0.72 + dynamics.low * 0.28
+    state.beatRotation = fract(
+      state.beatRotation + attack * 0.058 + state.beatPulse * 0.008,
+    )
+    state.linearRotation = fract(
+      state.linearRotation + options.deltaMs * 0.0000014,
+    )
+    state.previousLowEnergy =
+      state.previousLowEnergy * 0.72 + dynamics.low * 0.28
   } else {
     state.beatPulse *= 0.96
   }
 
   if (state.particles.width !== width || state.particles.height !== height) {
-    state.particles = createParticleField(width, height, state.particles.particles.length)
+    state.particles = createParticleField(
+      width,
+      height,
+      state.particles.particles.length,
+    )
   }
 
   context.clearRect(0, 0, width, height)
 
-  drawBlobGlow(context, width, height, palette, dynamics, state.beatPulse, options.timeMs)
+  drawBlobGlow(
+    context,
+    width,
+    height,
+    palette,
+    dynamics,
+    state.beatPulse,
+    options.timeMs,
+  )
   drawParticles(
     context,
     state.particles,
@@ -181,14 +202,15 @@ export function drawDuplicatedFrequencyRings(
   const gapFactor = 0.072 + dynamics.mid * 0.028 + dynamics.high * 0.02
   const ringGap = outerBaseRadius * gapFactor
   const middleBaseRadius = outerBaseRadius - ringGap
-  const innerBaseRadius = middleBaseRadius - ringGap * (0.92 + dynamics.low * 0.16)
+  const innerBaseRadius =
+    middleBaseRadius - ringGap * (0.92 + dynamics.low * 0.16)
   const maxAmplitude = Math.min(width, height) * 0.14
   const ringOffsetBase = fract(state.beatRotation + state.linearRotation)
   const dynamicAmplitude =
-    0.76
-    + Math.pow(dynamics.low, 1.25) * 0.82
-    + Math.pow(dynamics.energy, 1.1) * 0.46
-    + state.beatPulse * 0.35
+    0.76 +
+    Math.pow(dynamics.low, 1.25) * 0.82 +
+    Math.pow(dynamics.energy, 1.1) * 0.46 +
+    state.beatPulse * 0.35
 
   context.save()
   context.translate(centerX, centerY)
@@ -208,9 +230,9 @@ export function drawDuplicatedFrequencyRings(
   drawRing(context, frequencies, {
     baseRadius: middleBaseRadius,
     maxAmplitude:
-      maxAmplitude
-      * (0.58 + dynamics.mid * 0.5 + state.beatPulse * 0.22)
-      * signature.innerAmplitude,
+      maxAmplitude *
+      (0.58 + dynamics.mid * 0.5 + state.beatPulse * 0.22) *
+      signature.innerAmplitude,
     strokeStyle: palette.accent,
     lineWidth: 1.8 + state.beatPulse * 0.85,
     alpha: 0.86,
@@ -223,9 +245,9 @@ export function drawDuplicatedFrequencyRings(
   drawRing(context, frequencies, {
     baseRadius: innerBaseRadius,
     maxAmplitude:
-      maxAmplitude
-      * (0.42 + dynamics.mid * 0.42 + state.beatPulse * 0.16)
-      * (signature.innerAmplitude * 0.94),
+      maxAmplitude *
+      (0.42 + dynamics.mid * 0.42 + state.beatPulse * 0.16) *
+      (signature.innerAmplitude * 0.94),
     strokeStyle: palette.secondary,
     lineWidth: 1.5 + state.beatPulse * 0.8,
     alpha: 0.9,
@@ -265,11 +287,18 @@ function drawRing(
     const angle = pointIndex * step
     const shifted = pointIndex / points + options.frequencyOffset
     const normalized = shifted > 1 ? shifted - 1 : shifted
-    const rawAmplitude = sampleMirroredHalfFrequency(frequencies, frequenciesLength, normalized)
+    const rawAmplitude = sampleMirroredHalfFrequency(
+      frequencies,
+      frequenciesLength,
+      normalized,
+    )
     const response = Math.max(0.96, options.responseCurve - 0.16)
     const shapedAmplitude = Math.pow(rawAmplitude, response)
     const waveGain = 1.28 + clamp01(options.detailBoost) * 0.38
-    const amplitude = Math.max(0, options.amplitudeFloor + shapedAmplitude * waveGain)
+    const amplitude = Math.max(
+      0,
+      options.amplitudeFloor + shapedAmplitude * waveGain,
+    )
     const radius = options.baseRadius + amplitude * options.maxAmplitude
     const x = Math.cos(angle) * radius
     const y = Math.sin(angle) * radius
@@ -303,7 +332,9 @@ function drawBlobGlow(
 ) {
   const time = timeMs * 0.001
   const blobRadius = Math.min(width, height) * (0.28 + dynamics.energy * 0.16)
-  const blurRadius = Math.round(Math.min(width, height) * (0.08 + dynamics.energy * 0.06))
+  const blurRadius = Math.round(
+    Math.min(width, height) * (0.08 + dynamics.energy * 0.06),
+  )
 
   context.save()
   context.filter = `blur(${blurRadius}px)`
@@ -318,15 +349,23 @@ function drawBlobGlow(
       radius: blobRadius,
     },
     {
-      x: width * (0.44 + Math.cos(time * 0.52 + 2.2) * (0.13 + dynamics.mid * 0.08)),
-      y: height * (0.56 + Math.sin(time * 0.66 + 0.8) * (0.1 + dynamics.high * 0.07)),
+      x:
+        width *
+        (0.44 + Math.cos(time * 0.52 + 2.2) * (0.13 + dynamics.mid * 0.08)),
+      y:
+        height *
+        (0.56 + Math.sin(time * 0.66 + 0.8) * (0.1 + dynamics.high * 0.07)),
       color: palette.secondary,
       alpha: 0.33 + dynamics.mid * 0.4,
       radius: blobRadius * 0.76,
     },
     {
-      x: width * (0.58 + Math.sin(time * 0.88 + 0.6) * (0.12 + beatPulse * 0.09)),
-      y: height * (0.52 + Math.cos(time * 0.57 + 1.4) * (0.11 + dynamics.low * 0.06)),
+      x:
+        width *
+        (0.58 + Math.sin(time * 0.88 + 0.6) * (0.12 + beatPulse * 0.09)),
+      y:
+        height *
+        (0.52 + Math.cos(time * 0.57 + 1.4) * (0.11 + dynamics.low * 0.06)),
       color: palette.accent,
       alpha: 0.24 + beatPulse * 0.35,
       radius: blobRadius * 0.64,
@@ -375,13 +414,25 @@ function drawParticles(
 
   for (const particle of field.particles) {
     if (deltaSeconds > 0) {
-      const wobbleX = Math.sin(time * particle.wobble + particle.phase) * jitterStrength
-      const wobbleY = Math.cos(time * (particle.wobble * 0.92) + particle.phase * 1.3) * jitterStrength
-      const kickX = Math.sin(time * (3.6 + particle.wobble) + particle.phase * 0.7) * highKick * 14
-      const kickY = Math.cos(time * (3.2 + particle.wobble * 0.8) + particle.phase * 1.1) * highKick * 14
+      const wobbleX =
+        Math.sin(time * particle.wobble + particle.phase) * jitterStrength
+      const wobbleY =
+        Math.cos(time * (particle.wobble * 0.92) + particle.phase * 1.3) *
+        jitterStrength
+      const kickX =
+        Math.sin(time * (3.6 + particle.wobble) + particle.phase * 0.7) *
+        highKick *
+        14
+      const kickY =
+        Math.cos(time * (3.2 + particle.wobble * 0.8) + particle.phase * 1.1) *
+        highKick *
+        14
 
-      particle.x += (particle.velocityX * energySpeed * beatBoost + wobbleX + kickX) * deltaSeconds
-      particle.y += (particle.velocityY * energySpeed + wobbleY + kickY) * deltaSeconds
+      particle.x +=
+        (particle.velocityX * energySpeed * beatBoost + wobbleX + kickX) *
+        deltaSeconds
+      particle.y +=
+        (particle.velocityY * energySpeed + wobbleY + kickY) * deltaSeconds
 
       if (particle.x < -40) particle.x = field.width + 40
       if (particle.x > field.width + 40) particle.x = -40
@@ -402,8 +453,20 @@ function drawParticles(
       particle.y,
       radius,
     )
-    gradient.addColorStop(0, applyAlpha(palette.secondary, 0.24 + twinkle * 0.24 + brightnessBoost * 0.3))
-    gradient.addColorStop(0.6, applyAlpha(palette.primary, 0.12 + beatPulse * 0.16 + brightnessBoost * 0.24))
+    gradient.addColorStop(
+      0,
+      applyAlpha(
+        palette.secondary,
+        0.24 + twinkle * 0.24 + brightnessBoost * 0.3,
+      ),
+    )
+    gradient.addColorStop(
+      0.6,
+      applyAlpha(
+        palette.primary,
+        0.12 + beatPulse * 0.16 + brightnessBoost * 0.24,
+      ),
+    )
     gradient.addColorStop(1, applyAlpha(palette.accent, 0))
 
     context.fillStyle = gradient
@@ -415,7 +478,11 @@ function drawParticles(
   context.restore()
 }
 
-function createParticleField(width: number, height: number, count: number): ParticleField {
+function createParticleField(
+  width: number,
+  height: number,
+  count: number,
+): ParticleField {
   const particles: VisualizerParticle[] = []
 
   for (let index = 0; index < count; index += 1) {
@@ -438,7 +505,9 @@ function createParticleField(width: number, height: number, count: number): Part
 }
 
 function applyAlpha(hsla: string, alpha: number) {
-  const match = hsla.match(/hsla\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\s*\)/)
+  const match = hsla.match(
+    /hsla\(\s*([^,]+),\s*([^,]+),\s*([^,]+),\s*([^)]+)\s*\)/,
+  )
   if (!match) return hsla
 
   const [, hue, saturation, lightness] = match
@@ -484,9 +553,8 @@ function sampleMirroredHalfFrequency(
     return (frequencies[0] ?? 0) / 255
   }
 
-  const halfProgress = normalized < 0.5
-    ? normalized * 2
-    : (normalized - 0.5) * 2
+  const halfProgress =
+    normalized < 0.5 ? normalized * 2 : (normalized - 0.5) * 2
   const indexFloat = halfProgress * (halfLength - 1)
   const indexA = Math.floor(indexFloat)
   const indexB = Math.min(halfLength - 1, indexA + 1)

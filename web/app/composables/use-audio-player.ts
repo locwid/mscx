@@ -24,9 +24,11 @@ export function useAudioPlayer() {
     src: computed(() => fileSrc.value || ''),
   })
 
-  const mediaSession = typeof navigator !== 'undefined' ? navigator.mediaSession : undefined
+  const mediaSession =
+    typeof navigator !== 'undefined' ? navigator.mediaSession : undefined
   const canSetMetadata = typeof MediaMetadata !== 'undefined'
-  const canSetPositionState = typeof mediaSession?.setPositionState === 'function'
+  const canSetPositionState =
+    typeof mediaSession?.setPositionState === 'function'
 
   function getAudioGraph() {
     const element = audioRef.value
@@ -88,7 +90,11 @@ export function useAudioPlayer() {
       artist: 'mscx',
       album: 'mscx',
       artwork: [
-        { src: '/apple-touch-icon-180x180.png', sizes: '180x180', type: 'image/png' },
+        {
+          src: '/apple-touch-icon-180x180.png',
+          sizes: '180x180',
+          type: 'image/png',
+        },
         { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
       ],
     })
@@ -103,7 +109,13 @@ export function useAudioPlayer() {
     if (!mediaSession || !canSetPositionState) return
     const total = duration.value
     const position = currentTime.value
-    if (!Number.isFinite(total) || total <= 0 || !Number.isFinite(position) || position < 0) return
+    if (
+      !Number.isFinite(total) ||
+      total <= 0 ||
+      !Number.isFinite(position) ||
+      position < 0
+    )
+      return
     mediaSession.setPositionState({
       duration: total,
       position,
@@ -115,18 +127,26 @@ export function useAudioPlayer() {
     clearMediaSessionHandlers()
   })
 
-  watch(currentTrack, () => {
-    updateMediaSessionMetadata()
-    setupMediaSessionHandlers()
-  }, { immediate: true })
+  watch(
+    currentTrack,
+    () => {
+      updateMediaSessionMetadata()
+      setupMediaSessionHandlers()
+    },
+    { immediate: true },
+  )
 
-  watch(playing, () => {
-    updateMediaSessionPlaybackState()
-    setupMediaSessionHandlers()
+  watch(
+    playing,
+    () => {
+      updateMediaSessionPlaybackState()
+      setupMediaSessionHandlers()
 
-    if (!playing.value) return
-    void resumeAudioContext()
-  }, { immediate: true })
+      if (!playing.value) return
+      void resumeAudioContext()
+    },
+    { immediate: true },
+  )
 
   watch(audioRef, () => {
     getAudioGraph()
