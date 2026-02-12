@@ -26,6 +26,11 @@ const height = computed(
 function handleTrackClick(trackId: string) {
   player.start(trackId, playlistId)
 }
+
+function handleTrackDblClick(trackId: string) {
+  player.start(trackId, playlistId)
+  player.openFullscreen()
+}
 </script>
 
 <template>
@@ -36,6 +41,7 @@ function handleTrackClick(trackId: string) {
         :key="item.data.id"
         :track="item.data"
         @click="handleTrackClick(item.data.id)"
+        @dblclick="handleTrackDblClick(item.data.id)"
         :active="currentTrackId === item.data.id"
       />
     </div>

@@ -9,6 +9,7 @@ defineProps<{
 
 defineEmits<{
   (e: 'click', id: string): void
+  (e: 'dblclick', id: string): void
 }>()
 </script>
 
@@ -20,6 +21,7 @@ defineEmits<{
     <div
       class="p-2 flex gap-2 overflow-hidden"
       @click="$emit('click', track.id)"
+      @dblclick="$emit('dblclick', track.id)"
     >
       <Avatar :name="track.id" class="grow-0 shrink-0" />
       <div class="flex flex-col gap-1">

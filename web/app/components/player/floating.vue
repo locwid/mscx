@@ -40,27 +40,27 @@ function handleDoubleClick() {
     </Transition>
     <div class="flex gap-1">
       <UButton
-        :variant="player.shuffle ? 'solid' : 'subtle'"
+        :variant="player.shuffle ? 'soft' : 'link'"
         size="xl"
         icon="i-lucide-shuffle"
-        :color="player.shuffle ? 'primary' : undefined"
+        :color="player.shuffle ? 'primary' : 'neutral'"
         @click.stop="player.toggleShuffle()"
       />
       <UButton
-        variant="subtle"
-        size="xl"
+        variant="link"
+        color="neutral"
         icon="i-lucide-skip-back"
         @click.stop="player.switchToPreviousTrack()"
       />
       <UButton
-        variant="subtle"
-        size="xl"
+        variant="link"
+        color="neutral"
         :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
         @click.stop="playing = !playing"
       />
       <UButton
-        variant="subtle"
-        size="xl"
+        variant="link"
+        color="neutral"
         icon="i-lucide-skip-forward"
         @click.stop="player.switchToNextTrack()"
       />

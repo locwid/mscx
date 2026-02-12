@@ -18,15 +18,15 @@ const openInfo = ref(false)
 <template>
   <UModal v-model:open="player.isFullscreenOpen" fullscreen :ui="{ content: 'h-screen w-full max-w-lg mx-auto bg-default rounded-lg shadow-lg ring ring-default flex flex-col focus:outline-none' }">
     <template #content>
-      <div class="relative flex flex-col h-full p-6 overflow-hidden">
+      <div class="relative flex flex-col h-full px-6 py-8 overflow-hidden">
         <PlayerVisualizer :track-id="track.id" :playing="playing" />
         <div class="relative z-10 flex justify-between items-center mb-4">
-          <div class="text-muted text-sm">
-            playing {{ player.currentPlaylist?.name || '🎵' }}
+          <div class="text-muted text-lg">
+            playing <span class="text-primary">{{ player.currentPlaylist?.name || 'mscx' }}</span>
           </div>
           <UButton
-            variant="subtle"
-            size="sm"
+            variant="link"
+            color="neutral"
             icon="i-lucide-arrow-left"
             @click="player.closeFullscreen()"
           />
@@ -44,35 +44,36 @@ const openInfo = ref(false)
           </div>
           <div class="flex justify-between items-center gap-4">
             <UButton
-              :variant="player.shuffle ? 'solid' : 'subtle'"
+              :variant="player.shuffle ? 'soft' : 'link'"
               size="xl"
               icon="i-lucide-shuffle"
-              :color="player.shuffle ? 'primary' : undefined"
+              :color="player.shuffle ? 'primary' : 'neutral'"
               @click="player.toggleShuffle()"
             />
             <div class="flex gap-2">
               <UButton
-                variant="subtle"
+                variant="link"
+                color="neutral"
                 size="xl"
                 icon="i-lucide-skip-back"
                 @click="player.switchToPreviousTrack()"
               />
               <UButton
-                variant="subtle"
-                size="xl"
+                variant="link"
+                color="neutral"
                 :icon="playing ? 'i-lucide-pause' : 'i-lucide-play'"
                 @click="playing = !playing"
               />
               <UButton
-                variant="subtle"
-                size="xl"
+                variant="link"
+                color="neutral"
                 icon="i-lucide-skip-forward"
                 @click="player.switchToNextTrack()"
               />
             </div>
             <UButton
+              variant="link"
               color="neutral"
-              variant="ghost"
               icon="i-lucide-ellipsis"
               size="xl"
               @click="openInfo = true"

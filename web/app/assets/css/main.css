@@ -3,6 +3,10 @@
 
 @custom-variant dark (&:is(.dark *));
 
+* {
+  @apply select-none;
+}
+
 :root {
   --ui-radius: 0.25rem;
   --font-sans: 'Funnel Sans', sans-serif;
