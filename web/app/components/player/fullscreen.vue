@@ -18,8 +18,9 @@ const openInfo = ref(false)
 <template>
   <UModal v-model:open="player.isFullscreenOpen" fullscreen :ui="{ content: 'h-screen w-full max-w-lg mx-auto bg-default rounded-lg shadow-lg ring ring-default flex flex-col focus:outline-none' }">
     <template #content>
-      <div class="flex flex-col h-full p-6">
-        <div class="flex justify-between items-center mb-4">
+      <div class="relative flex flex-col h-full p-6 overflow-hidden">
+        <PlayerVisualizer :track-id="track.id" :playing="playing" />
+        <div class="relative z-10 flex justify-between items-center mb-4">
           <div class="text-muted text-sm">
             playing {{ player.currentPlaylist?.name || '🎵' }}
           </div>
@@ -30,19 +31,14 @@ const openInfo = ref(false)
             @click="player.closeFullscreen()"
           />
         </div>
-        <div class="flex-1 flex items-center justify-center mb-4">
-          <Transition name="fade" mode="out-in">
-            <Avatar :key="track.id" :name="track.id" :size="300" class="rounded-lg" />
-          </Transition>
-        </div>
-        <div class="w-full mb-8">
+        <div class="relative z-10 w-full mb-8 mt-auto">
           <Transition name="fade" mode="out-in">
             <div class="text-center" :key="track.id">
               <h2 class="text-xl font-bold truncate">{{ track.name }}</h2>
             </div>
           </Transition>
         </div>
-        <div class="w-full">
+        <div class="relative z-10 w-full">
           <div class="mb-8">
             <USlider v-model="currentTime" :min="0" :max="duration" />
           </div>
