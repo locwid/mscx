@@ -30,7 +30,7 @@ func (i importController) ImportFromYoutube(c *echo.Context) error {
 
 	// Check dependencies
 	if err := i.youtubeService.CheckDependencies(); err != nil {
-		return echo.ErrInternalServerError.Wrap(err)
+		return echo.ErrServiceUnavailable.Wrap(err)
 	}
 
 	// Enqueue import

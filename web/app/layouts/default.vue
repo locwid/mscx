@@ -2,14 +2,16 @@
 import { trySyncWithServer } from '~/shared/api/sync-with-server'
 import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { useAudioPlayer } from '~/composables/use-audio-player'
+import { useHealthCheck } from '~/composables/use-health-check'
 
 const { currentTrack, isFullscreenOpen } = storeToRefs(usePlayer())
-const { switchToNextTrack } = usePlayer()
 
 const audioPlayer = useAudioPlayer()
+const { checkHealth } = useHealthCheck()
 provide(AUDIO_PLAYER_KEY, audioPlayer)
 
 onBeforeMount(() => {
+  checkHealth()
   trySyncWithServer()
   window.addEventListener('online', trySyncWithServer)
 })

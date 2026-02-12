@@ -34,3 +34,9 @@ export interface CreatePlaylistPayload {
 export interface ImportYouTubePayload {
   url: string
 }
+export interface HealthResponse {
+  status: 'healthy' | 'degraded' | 'unhealthy'
+  database: boolean
+  dependencies: Record<string, boolean>
+  timestamp: string
+}

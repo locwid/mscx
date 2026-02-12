@@ -62,6 +62,10 @@ func main() {
 	playlist.POST("/:id/track/:trackId", playlistController.AddTrack)
 	playlist.DELETE("/:id/track/:trackId", playlistController.DeleteTrack)
 
+	healthService := service.MakeHealthService(db, youtubeService)
+	healthController := controller.MakeHealthController(healthService)
+	api.GET("/health", healthController.Check)
+
 	// Gracefull shutdown
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()

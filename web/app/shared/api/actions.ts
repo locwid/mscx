@@ -2,6 +2,7 @@ import { apiFetch } from './fetch'
 import type {
   CreatePlaylistPayload,
   CreateTrackPayload,
+  HealthResponse,
   ImportYouTubePayload,
   PlaylistResponse,
   TrackResponse,
@@ -85,4 +86,7 @@ export const apiGetFile = async (filename: string) => {
   return new File([blob], filename, {
     type: response.headers.get('Content-Type') ?? '',
   })
+}
+export const apiHealth = () => {
+  return apiFetch<HealthResponse>('/health', { method: 'GET' })
 }
