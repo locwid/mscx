@@ -108,8 +108,21 @@ func (s *youtubeService) processJob(job ImportJob) error {
 		return err
 	}
 
-	if err := s.saveTrackFromFile(job.VideoID, filePath); err != nil {
+	track, err := s.saveTrackFromFile(job.VideoID, filePath)
+	if err != nil {
 		return err
+	}
+
+	// Extract and move thumbnail
+	tempDir := config.GetTempDir()
+	thumbnailPath, err := s.findThumbnail(tempDir, job.VideoID)
+	if err == nil {
+		if err := s.moveThumbnail(thumbnailPath, track.ID); err != nil {
+			fmt.Printf("Warning: failed to move thumbnail for video %s: %v\n", job.VideoID, err)
+			// Don't fail the whole import if thumbnail move fails
+		}
+	} else {
+		fmt.Printf("Info: no thumbnail found for video %s\n", job.VideoID)
 	}
 
 	fmt.Printf("Successfully imported video %s\n", job.VideoID)
@@ -126,7 +139,8 @@ func (s *youtubeService) downloadVideo(job ImportJob) (string, error) {
 	args := []string{
 		"--extract-audio",
 		"--audio-format", "mp3",
-		"--embed-thumbnail",
+		"--write-thumbnail",
+		"--convert-thumbnails", "webp",
 		"--audio-quality", "0",
 		"--js-runtimes", "bun",
 		"--output", filenamePattern,
@@ -174,6 +188,20 @@ func (s *youtubeService) extractYoutubeID(filename string) string {
 	return parts[2]
 }
 
+func (s *youtubeService) extractYoutubeIDFromAnyFile(filename string) string {
+	// Remove any file extension
+	baseName := filename
+	if idx := strings.LastIndex(baseName, "."); idx >= 0 {
+		baseName = baseName[:idx]
+	}
+
+	parts := strings.Split(baseName, filenameSeparator)
+	if len(parts) != 3 {
+		return ""
+	}
+	return parts[2]
+}
+
 func (s *youtubeService) parseFilename(filename string) (title string, duration uint, youtubeID string, err error) {
 	baseName := strings.TrimSuffix(filename, mp3Extension)
 	parts := strings.Split(baseName, filenameSeparator)
@@ -189,24 +217,24 @@ func (s *youtubeService) parseFilename(filename string) (title string, duration 
 	return parts[0], uint(durationInt), parts[2], nil
 }
 
-func (s *youtubeService) saveTrackFromFile(videoID, filePath string) error {
+func (s *youtubeService) saveTrackFromFile(videoID, filePath string) (*models.Track, error) {
 	title, duration, youtubeID, err := s.parseFilename(filepath.Base(filePath))
 	if err != nil {
-		return fmt.Errorf("failed to parse filename: %v", err)
+		return nil, fmt.Errorf("failed to parse filename: %v", err)
 	}
 
 	if youtubeID != videoID {
-		return fmt.Errorf("youtube ID mismatch: expected %s, got %s", videoID, youtubeID)
+		return nil, fmt.Errorf("youtube ID mismatch: expected %s, got %s", videoID, youtubeID)
 	}
 
 	info, err := os.Stat(filePath)
 	if err != nil {
-		return fmt.Errorf("failed to stat file: %v", err)
+		return nil, fmt.Errorf("failed to stat file: %v", err)
 	}
 
 	id, err := gonanoid.New()
 	if err != nil {
-		return fmt.Errorf("failed to generate ID: %v", err)
+		return nil, fmt.Errorf("failed to generate ID: %v", err)
 	}
 
 	track := models.Track{
@@ -220,15 +248,40 @@ func (s *youtubeService) saveTrackFromFile(videoID, filePath string) error {
 	}
 
 	if err := s.db.Create(&track).Error; err != nil {
-		return fmt.Errorf("failed to save track to DB: %v", err)
+		return nil, fmt.Errorf("failed to save track to DB: %v", err)
 	}
 
 	destPath := config.GetFilePath(track.GetFilename())
 	if err := os.Rename(filePath, destPath); err != nil {
 		s.db.Delete(&track)
-		return fmt.Errorf("failed to move file: %v", err)
+		return nil, fmt.Errorf("failed to move file: %v", err)
 	}
 
+	return &track, nil
+}
+
+func (s *youtubeService) findThumbnail(tempDir, videoID string) (string, error) {
+	files, err := os.ReadDir(tempDir)
+	if err != nil {
+		return "", err
+	}
+
+	for _, file := range files {
+		if strings.HasSuffix(file.Name(), ".webp") {
+			if youtubeID := s.extractYoutubeIDFromAnyFile(file.Name()); youtubeID == videoID {
+				return filepath.Join(tempDir, file.Name()), nil
+			}
+		}
+	}
+
+	return "", fmt.Errorf("no webp thumbnail found for video %s", videoID)
+}
+
+func (s *youtubeService) moveThumbnail(thumbnailPath, trackID string) error {
+	destPath := config.GetFilePath(trackID + ".webp")
+	if err := os.Rename(thumbnailPath, destPath); err != nil {
+		return fmt.Errorf("failed to move thumbnail: %v", err)
+	}
 	return nil
 }
 

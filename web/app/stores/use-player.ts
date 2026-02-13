@@ -64,6 +64,10 @@ export const usePlayer = defineStore('player', () => {
     tracks.value?.find((t) => t.id === currentTrackId.value),
   )
 
+  const { src: thumbnailSrc, hasThumbnail } = useTrackThumbnail(
+    () => currentTrack.value,
+  )
+
   const title = useTitle()
   watch(
     currentTrack,
@@ -141,6 +145,8 @@ export const usePlayer = defineStore('player', () => {
     currentPlaylist,
     currentTrackId,
     currentTrack,
+    thumbnailSrc: readonly(thumbnailSrc),
+    hasThumbnail: readonly(hasThumbnail),
     shuffle: readonly(shuffle),
     isFullscreenOpen: readonly(isFullscreenOpen),
     toggleShuffle,

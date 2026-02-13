@@ -8,6 +8,7 @@ import {
   apiDeleteTrackFromPlaylist,
   apiGetPlaylists,
   apiGetTracks,
+  apiGetThumbnail,
 } from './actions'
 import { nanoid } from 'nanoid'
 
@@ -95,16 +96,19 @@ async function syncPlaylistTracks() {
 async function freshTracks() {
   const items = await apiGetTracks()
   await dexieStorage.transaction('rw', ['tracks'], async ({ tracks }) => {
+    const allPrev = await tracks.toArray()
     const withFiles = await tracks.filter((obj) => !!obj.keepFile).toArray()
     await tracks.clear()
     await tracks.bulkAdd(
       items.map((track) => {
-        const prev = withFiles.find((item) => item.id === track.id)
+        const prev = allPrev.find((item) => item.id === track.id)
+        const prevWithFile = withFiles.find((item) => item.id === track.id)
         return {
           id: track.id,
           name: track.name,
-          keepFile: prev?.keepFile,
-          file: prev?.file,
+          keepFile: prevWithFile?.keepFile,
+          file: prevWithFile?.file,
+          thumbnail: prev?.thumbnail,
           size: track.size,
           type: track.type,
           duration: track.duration,
@@ -114,6 +118,9 @@ async function freshTracks() {
       }),
     )
   })
+
+  // Fetch thumbnails for all tracks
+  await fetchThumbnails(items.map((t) => t.id))
 }
 
 async function freshPlaylists() {
@@ -146,4 +153,21 @@ async function freshPlaylists() {
       )
     },
   )
+}
+
+async function fetchThumbnails(trackIds: string[]) {
+  for (const id of trackIds) {
+    try {
+      const track = await dexieStorage.tracks.get(id)
+      // Only fetch if thumbnail doesn't exist
+      if (!track?.thumbnail) {
+        const blob = await apiGetThumbnail(id)
+        if (blob.size > 0) {
+          await dexieStorage.tracks.update(id, { thumbnail: blob })
+        }
+      }
+    } catch {
+      // Silently skip if thumbnail fetch fails for any reason
+    }
+  }
 }

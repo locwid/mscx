@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { trySyncWithServer } from '~/shared/api/sync-with-server';
+
 const online = useOnline()
 const { headerTitle } = storeToRefs(useAppStore())
 </script>
@@ -18,6 +20,7 @@ const { headerTitle } = storeToRefs(useAppStore())
       </span>
     </span>
     <div class="flex gap-2">
+      <UButton icon="i-lucide-cloud-sync" variant="outline" color="neutral" @click="trySyncWithServer" loading-auto />
       <TrackUpload>
         <UButton icon="i-lucide-upload" variant="outline" color="neutral" />
       </TrackUpload>

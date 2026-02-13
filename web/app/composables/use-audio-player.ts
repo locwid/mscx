@@ -9,13 +9,9 @@ import { usePlayer } from '~/stores/use-player'
 
 export function useAudioPlayer() {
   const player = usePlayer()
-  const currentTrack = computed(() => player.currentTrack)
+  const { currentTrack } = storeToRefs(player)
 
-  const fileSrc = computed(() => {
-    const track = currentTrack.value
-    if (!track) return undefined
-    return useTrackFile(() => track).value
-  })
+  const fileSrc = useTrackFile(() => currentTrack.value)
 
   const audioRef = ref<HTMLAudioElement | null>(null)
   const audioGraph = shallowRef<AudioGraph | null>(null)
@@ -85,18 +81,29 @@ export function useAudioPlayer() {
       mediaSession.metadata = null
       return
     }
+
+    const artwork: MediaImage[] = []
+    if (player.hasThumbnail && player.thumbnailSrc) {
+      artwork.push({
+        src: player.thumbnailSrc,
+        sizes: 'any',
+        type: 'image/webp',
+      })
+    }
+    artwork.push(
+      {
+        src: '/apple-touch-icon-180x180.png',
+        sizes: '180x180',
+        type: 'image/png',
+      },
+      { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
+    )
+
     mediaSession.metadata = new MediaMetadata({
       title: track.name,
       artist: 'mscx',
       album: 'mscx',
-      artwork: [
-        {
-          src: '/apple-touch-icon-180x180.png',
-          sizes: '180x180',
-          type: 'image/png',
-        },
-        { src: '/favicon.svg', sizes: 'any', type: 'image/svg+xml' },
-      ],
+      artwork,
     })
   }
 

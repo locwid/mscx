@@ -1,6 +1,5 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
-import Avatar from 'vue-boring-avatars'
 import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { usePlayer } from '~/stores/use-player'
 
@@ -43,7 +42,13 @@ const openInfo = ref(false)
         </div>
         <div class="relative z-10 w-full mb-8 mt-auto">
           <Transition name="fade" mode="out-in">
-            <div class="text-center" :key="track.id">
+            <div class="text-center flex items-center justify-center gap-3" :key="track.id">
+              <img
+                v-if="player.hasThumbnail"
+                :src="player.thumbnailSrc"
+                :alt="track.name"
+                class="h-12 w-12 rounded object-cover shrink-0"
+              />
               <h2 class="text-xl font-bold truncate">{{ track.name }}</h2>
             </div>
           </Transition>

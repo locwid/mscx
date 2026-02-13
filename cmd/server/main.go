@@ -47,6 +47,7 @@ func main() {
 	track.POST("", trackController.Create)
 	track.DELETE("/:id", trackController.Delete)
 	track.GET("/:id/file", trackController.GetFile)
+	track.GET("/:id/thumbnail", trackController.GetThumbnail)
 
 	youtubeService := service.MakeYoutubeService(db)
 	importController := controller.MakeImportController(youtubeService)

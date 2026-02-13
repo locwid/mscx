@@ -15,6 +15,7 @@ type TrackController interface {
 	GetList(c *echo.Context) error
 	Delete(c *echo.Context) error
 	GetFile(c *echo.Context) error
+	GetThumbnail(c *echo.Context) error
 }
 
 type trackController struct {
@@ -41,6 +42,27 @@ func (t trackController) GetFile(c *echo.Context) error {
 		return echo.ErrInternalServerError.Wrap(err)
 	}
 
+	return c.File(filePath)
+}
+
+// GetThumbnail implements [TrackController].
+func (t trackController) GetThumbnail(c *echo.Context) error {
+	var id string
+	err := echo.PathValuesBinder(c).String("id", &id).BindError()
+	if err != nil {
+		return echo.ErrBadRequest.Wrap(err)
+	}
+
+	// Verify track exists
+	_, err = t.trackService.GetTrack(id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return echo.ErrNotFound
+		}
+		return echo.ErrInternalServerError.Wrap(err)
+	}
+
+	filePath := t.trackService.GetThumbnailPath(id)
 	return c.File(filePath)
 }
 

@@ -12,6 +12,7 @@ export interface Track extends BaseEntity {
   name: string
   file?: File
   keepFile?: boolean
+  thumbnail?: Blob
   size: number
   duration: number
   type: string
@@ -35,7 +36,7 @@ class DexieStorage extends Dexie {
     super('mscx-db')
     const baseColumns = 'id, sync, createdAt'
     this.version(1).stores({
-      tracks: `${baseColumns}, name, file, keepFile, size, duration, type`,
+      tracks: `${baseColumns}, name, file, keepFile, thumbnail, size, duration, type`,
       playlists: `${baseColumns}, name`,
       playlistTracks: `${baseColumns}, [playlistId+trackId], trackId`,
     })

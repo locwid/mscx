@@ -23,7 +23,15 @@ function handleDoubleClick() {
     @dblclick="handleDoubleClick"
   >
     <Transition name="fade" mode="out-in">
-      <Avatar :key="track.id" :name="track.id" class="grow-0 shrink-0" />
+      <div :key="track.id" class="grow-0 shrink-0">
+        <img
+          v-if="player.hasThumbnail"
+          :src="player.thumbnailSrc"
+          :alt="track.name"
+          class="w-10 h-10 rounded object-cover"
+        />
+        <Avatar v-else :name="track.id" class="w-10 h-10" />
+      </div>
     </Transition>
     <Transition name="fade" mode="out-in">
       <div

@@ -1,15 +1,15 @@
 import { getFileUrlWithAuthKey } from '~/shared/api/actions'
 import type { Track } from '~/dexie.storage'
 
-export function useTrackFile(trackGetter: () => Track) {
-  const track = toRef(trackGetter)
+export function useTrackFile(trackGetter: () => Track | undefined) {
+  const track = computed(trackGetter)
   const { authKey } = storeToRefs(useAuthStore())
 
   const src = computed(() => {
-    if (track.value.file) {
+    if (track.value && track.value.file) {
       return URL.createObjectURL(track.value.file)
     }
-    return getFileUrlWithAuthKey(track.value.id, authKey.value)
+    return track.value ? getFileUrlWithAuthKey(track.value.id, authKey.value) : undefined
   })
 
   return src

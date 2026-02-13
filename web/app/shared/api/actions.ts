@@ -77,6 +77,10 @@ export const getFileUrl = (id: string) => `/api/track/${id}/file`
 export const getFileUrlWithAuthKey = (id: string, authKey: string) =>
   `${getFileUrl(id)}?authKey=${authKey}`
 
+export const getThumbnailUrl = (id: string) => `/api/track/${id}/thumbnail`
+export const getThumbnailUrlWithAuthKey = (id: string, authKey: string) =>
+  `${getThumbnailUrl(id)}?authKey=${authKey}`
+
 export const apiGetFile = async (filename: string) => {
   const response = await apiFetch.raw<ReadableStream>(getFileUrl(filename), {
     method: 'GET',
@@ -86,6 +90,14 @@ export const apiGetFile = async (filename: string) => {
   return new File([blob], filename, {
     type: response.headers.get('Content-Type') ?? '',
   })
+}
+
+export const apiGetThumbnail = async (id: string) => {
+  const response = await apiFetch.raw<ReadableStream>(getThumbnailUrl(id), {
+    method: 'GET',
+    responseType: 'stream',
+  })
+  return response.blob()
 }
 export const apiHealth = () => {
   return apiFetch<HealthResponse>('/health', { method: 'GET' })

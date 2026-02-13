@@ -2,7 +2,7 @@
 import type { Track } from '~/dexie.storage'
 import Avatar from 'vue-boring-avatars'
 
-defineProps<{
+const props = defineProps<{
   track: Track
   active?: boolean
 }>()
@@ -11,6 +11,8 @@ defineEmits<{
   (e: 'click', id: string): void
   (e: 'dblclick', id: string): void
 }>()
+
+const { src, hasThumbnail } = useTrackThumbnail(() => props.track)
 </script>
 
 <template>
@@ -23,7 +25,15 @@ defineEmits<{
       @click="$emit('click', track.id)"
       @dblclick="$emit('dblclick', track.id)"
     >
-      <Avatar :name="track.id" class="grow-0 shrink-0" />
+      <div class="grow-0 shrink-0">
+        <img
+          v-if="hasThumbnail"
+          :src="src"
+          :alt="track.name"
+          class="w-10 h-10 rounded object-cover"
+        />
+        <Avatar v-else :name="track.id" class="w-10 h-10" />
+      </div>
       <div class="flex flex-col gap-1">
         <span class="truncate leading-none">{{ track.name }}</span>
         <span class="text-muted text-xs inline-flex gap-2">

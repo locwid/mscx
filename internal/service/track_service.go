@@ -17,6 +17,7 @@ type TrackService interface {
 	GetTracks() ([]*models.Track, error)
 	DeleteTrack(id string) error
 	GetTrackFilePath(id string) (string, error)
+	GetThumbnailPath(id string) string
 }
 
 type trackService struct {
@@ -93,8 +94,15 @@ func (s *trackService) DeleteTrack(id string) error {
 		return err
 	}
 
+	// Delete audio file
 	err = os.Remove(config.GetFilePath(track.GetFilename()))
 	if err != nil {
+		return err
+	}
+
+	// Delete thumbnail file if it exists
+	thumbnailPath := config.GetFilePath(id + ".webp")
+	if err := os.Remove(thumbnailPath); err != nil && !os.IsNotExist(err) {
 		return err
 	}
 
@@ -107,4 +115,8 @@ func (s *trackService) GetTrackFilePath(id string) (string, error) {
 		return "", err
 	}
 	return config.GetFilePath(track.GetFilename()), nil
+}
+
+func (s *trackService) GetThumbnailPath(id string) string {
+	return config.GetFilePath(id + ".webp")
 }
