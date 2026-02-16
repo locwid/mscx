@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Track } from '~/dexie.storage'
+import Avatar from 'vue-boring-avatars'
 import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { usePlayer } from '~/stores/use-player'
 
@@ -25,7 +26,6 @@ const openInfo = ref(false)
   >
     <template #content>
       <div class="relative flex flex-col h-full px-6 py-8 overflow-hidden">
-        <PlayerVisualizer :track-id="track.id" :playing="playing" />
         <div class="relative z-10 flex justify-between items-center mb-4">
           <div class="text-muted text-lg">
             playing
@@ -40,15 +40,22 @@ const openInfo = ref(false)
             @click="player.closeFullscreen()"
           />
         </div>
-        <div class="relative z-10 w-full mb-8 mt-auto">
+        <div class="relative z-10 flex grow items-center justify-center">
           <Transition name="fade" mode="out-in">
-            <div class="text-center flex items-center justify-center gap-3" :key="track.id">
+            <div :key="track.id" class="h-72 w-72 rounded-xl overflow-hidden">
               <img
                 v-if="player.hasThumbnail"
                 :src="player.thumbnailSrc"
                 :alt="track.name"
-                class="h-12 w-12 rounded object-cover shrink-0"
+                class="h-full w-full object-cover"
               />
+              <Avatar v-else :name="track.id" class="h-full w-full" />
+            </div>
+          </Transition>
+        </div>
+        <div class="relative z-10 w-full mb-8 mt-auto">
+          <Transition name="fade" mode="out-in">
+            <div class="text-center" :key="track.id">
               <h2 class="text-xl font-bold truncate">{{ track.name }}</h2>
             </div>
           </Transition>

@@ -1,10 +1,5 @@
 import { useMediaControls, useThrottleFn } from '@vueuse/core'
 import { useTrackFile } from '~/composables/use-track-file'
-import {
-  getOrCreateAudioGraph,
-  resumeAudioContextIfNeeded,
-  type AudioGraph,
-} from '~/shared/visualizer/audio-graph'
 import { usePlayer } from '~/stores/use-player'
 
 export function useAudioPlayer() {
@@ -14,7 +9,6 @@ export function useAudioPlayer() {
   const fileSrc = useTrackFile(() => currentTrack.value)
 
   const audioRef = ref<HTMLAudioElement | null>(null)
-  const audioGraph = shallowRef<AudioGraph | null>(null)
 
   const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
     src: computed(() => fileSrc.value || ''),
@@ -25,20 +19,6 @@ export function useAudioPlayer() {
   const canSetMetadata = typeof MediaMetadata !== 'undefined'
   const canSetPositionState =
     typeof mediaSession?.setPositionState === 'function'
-
-  function getAudioGraph() {
-    const element = audioRef.value
-    if (!element) return null
-    const graph = getOrCreateAudioGraph(element)
-    audioGraph.value = graph
-    return graph
-  }
-
-  async function resumeAudioContext() {
-    const graph = getAudioGraph()
-    if (!graph) return
-    await resumeAudioContextIfNeeded(graph.context)
-  }
 
   function setMediaSessionHandler(
     action: MediaSessionAction,
@@ -148,16 +128,9 @@ export function useAudioPlayer() {
     () => {
       updateMediaSessionPlaybackState()
       setupMediaSessionHandlers()
-
-      if (!playing.value) return
-      void resumeAudioContext()
     },
     { immediate: true },
   )
-
-  watch(audioRef, () => {
-    getAudioGraph()
-  })
 
   watch([currentTime, duration], () => {
     updateMediaSessionPositionState()
@@ -173,8 +146,6 @@ export function useAudioPlayer() {
     currentTime,
     duration,
     ended,
-    getAudioGraph,
-    resumeAudioContext,
   }
 }
 
@@ -184,6 +155,4 @@ export type AudioPlayer = {
   currentTime: Ref<number>
   duration: Ref<number>
   ended: Ref<boolean>
-  getAudioGraph: () => AudioGraph | null
-  resumeAudioContext: () => Promise<void>
 }
