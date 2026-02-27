@@ -20,27 +20,15 @@ export function useAudioPlayer() {
   const canSetPositionState =
     typeof mediaSession?.setPositionState === 'function'
 
-  function setMediaSessionHandler(
-    action: MediaSessionAction,
-    handler: MediaSessionActionHandler | null,
-  ) {
-    if (!mediaSession) return
-    try {
-      mediaSession.setActionHandler(action, handler)
-    } catch {
-      return
-    }
-  }
-
   function setupMediaSessionHandlers() {
     if (!mediaSession) return
-    setMediaSessionHandler('seekbackward', null)
-    setMediaSessionHandler('seekforward', null)
-    setMediaSessionHandler('nexttrack', () => {
+    mediaSession.setActionHandler('seekbackward', null)
+    mediaSession.setActionHandler('seekforward', null)
+    mediaSession.setActionHandler('nexttrack', () => {
       if (!currentTrack.value) return
       player.switchToNextTrack()
     })
-    setMediaSessionHandler('previoustrack', () => {
+    mediaSession.setActionHandler('previoustrack', () => {
       if (!currentTrack.value) return
       player.switchToPreviousTrack()
     })
@@ -48,10 +36,10 @@ export function useAudioPlayer() {
 
   function clearMediaSessionHandlers() {
     if (!mediaSession) return
-    setMediaSessionHandler('seekbackward', null)
-    setMediaSessionHandler('seekforward', null)
-    setMediaSessionHandler('nexttrack', null)
-    setMediaSessionHandler('previoustrack', null)
+    mediaSession.setActionHandler('seekbackward', null)
+    mediaSession.setActionHandler('seekforward', null)
+    mediaSession.setActionHandler('nexttrack', null)
+    mediaSession.setActionHandler('previoustrack', null)
   }
 
   function updateMediaSessionMetadata() {
@@ -127,7 +115,6 @@ export function useAudioPlayer() {
     playing,
     () => {
       updateMediaSessionPlaybackState()
-      setupMediaSessionHandlers()
     },
     { immediate: true },
   )

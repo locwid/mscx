@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "nuxt dev",
+    "dev": "nuxt dev --host",
     "generate": "nuxt generate",
     "typecheck": "nuxt typecheck",
     "format": "bunx prettier --write .",
@@ -14,9 +14,7 @@
     "@pinia/nuxt": "0.11.3",
     "@vite-pwa/nuxt": "1.1.0",
     "@vueuse/rxjs": "^14.1.0",
-    "better-sqlite3": "^12.5.0",
     "dexie": "^4.2.1",
-    "kysely": "^0.28.9",
     "nanoid": "^5.1.6",
     "nuxt": "^4.2.2",
     "pinia": "^3.0.4",
@@ -29,7 +27,6 @@
   },
   "devDependencies": {
     "@iconify-json/lucide": "^1.2.83",
-    "@types/better-sqlite3": "^7.6.13",
     "@vite-pwa/assets-generator": "^1.0.2",
     "@vueuse/core": "^14.1.0",
     "@vueuse/nuxt": "^14.1.0",
