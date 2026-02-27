@@ -115,6 +115,7 @@ export function useAudioPlayer() {
     playing,
     () => {
       updateMediaSessionPlaybackState()
+      setupMediaSessionHandlers()
     },
     { immediate: true },
   )
