@@ -4,9 +4,29 @@ import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { useAudioPlayer } from '~/composables/use-audio-player'
 import { useHealthCheck } from '~/composables/use-health-check'
 
-const { currentTrack, isFullscreenOpen } = storeToRefs(usePlayer())
+const player = usePlayer()
+const { currentTrack } = storeToRefs(player)
 
-const audioPlayer = useAudioPlayer()
+const appStore = useAppStore()
+const { isFullscreenOpen } = storeToRefs(appStore)
+
+const title = useTitle()
+watch(
+  currentTrack,
+  (val) => {
+    title.value = val?.name ?? 'mscx'
+  },
+  { immediate: true },
+)
+
+const audioPlayer = useAudioPlayer({
+  trackGetter: () => currentTrack.value,
+  thumbnailSrcGetter: () => player.thumbnailSrc,
+  hasThumbnailGetter: () => player.hasThumbnail,
+  onEnded: () => player.switchToNextTrack(),
+  onNext: () => player.switchToNextTrack(),
+  onPrev: () => player.switchToPreviousTrack(),
+})
 const { checkHealth } = useHealthCheck()
 provide(AUDIO_PLAYER_KEY, audioPlayer)
 

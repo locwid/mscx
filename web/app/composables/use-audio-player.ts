@@ -1,12 +1,27 @@
 import { useMediaControls, useThrottleFn } from '@vueuse/core'
 import { useTrackFile } from '~/composables/use-track-file'
-import { usePlayer } from '~/stores/use-player'
+import type { Track } from '~/dexie.storage'
 
-export function useAudioPlayer() {
-  const player = usePlayer()
-  const { currentTrack } = storeToRefs(player)
+export type AudioPlayerOptions = {
+  trackGetter: () => Track | undefined
+  thumbnailSrcGetter: () => string | undefined
+  hasThumbnailGetter: () => boolean
+  onEnded: () => void
+  onNext: () => void
+  onPrev: () => void
+}
 
-  const fileSrc = useTrackFile(() => currentTrack.value)
+export function useAudioPlayer(options: AudioPlayerOptions) {
+  const {
+    trackGetter,
+    thumbnailSrcGetter,
+    hasThumbnailGetter,
+    onEnded,
+    onNext,
+    onPrev,
+  } = options
+
+  const fileSrc = useTrackFile(() => trackGetter())
 
   const audioRef = ref<HTMLAudioElement | null>(null)
 
@@ -25,12 +40,12 @@ export function useAudioPlayer() {
     mediaSession.setActionHandler('seekbackward', null)
     mediaSession.setActionHandler('seekforward', null)
     mediaSession.setActionHandler('nexttrack', () => {
-      if (!currentTrack.value) return
-      player.switchToNextTrack()
+      if (!trackGetter()) return
+      onNext()
     })
     mediaSession.setActionHandler('previoustrack', () => {
-      if (!currentTrack.value) return
-      player.switchToPreviousTrack()
+      if (!trackGetter()) return
+      onPrev()
     })
   }
 
@@ -44,16 +59,16 @@ export function useAudioPlayer() {
 
   function updateMediaSessionMetadata() {
     if (!mediaSession || !canSetMetadata) return
-    const track = currentTrack.value
+    const track = trackGetter()
     if (!track) {
       mediaSession.metadata = null
       return
     }
 
     const artwork: MediaImage[] = []
-    if (player.hasThumbnail && player.thumbnailSrc) {
+    if (hasThumbnailGetter() && thumbnailSrcGetter()) {
       artwork.push({
-        src: player.thumbnailSrc,
+        src: thumbnailSrcGetter()!,
         sizes: 'any',
         type: 'image/webp',
       })
@@ -103,7 +118,7 @@ export function useAudioPlayer() {
   })
 
   watch(
-    currentTrack,
+    () => trackGetter(),
     () => {
       updateMediaSessionMetadata()
       setupMediaSessionHandlers()
@@ -125,7 +140,7 @@ export function useAudioPlayer() {
   })
 
   watch(ended, () => {
-    if (ended.value) player.switchToNextTrack()
+    if (ended.value) onEnded()
   })
 
   return {

@@ -3,7 +3,7 @@ export const apiFetch = $fetch.create({
   onRequest: ({ options }) => {
     const authKey = useAuthStore().authKey
     if (authKey) {
-      options.headers.append('Authorization', authKey)
+      options.headers.set('Authorization', authKey)
     }
   },
   onResponseError: ({ response }) => {

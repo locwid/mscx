@@ -9,11 +9,12 @@ const props = defineProps<{
 }>()
 
 const player = usePlayer()
+const appStore = useAppStore()
 const audioPlayer = inject(AUDIO_PLAYER_KEY)!
 const { playing, currentTime, duration } = audioPlayer
 
 function handleDoubleClick() {
-  player.openFullscreen()
+  appStore.openFullscreen()
 }
 </script>
 

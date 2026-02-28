@@ -10,7 +10,6 @@ export const usePlayer = defineStore('player', () => {
   const currentTrackId = ref<string | null>(null)
   const shuffle = ref(false)
   const shuffleQueue = ref<Track[]>([])
-  const isFullscreenOpen = ref(false)
 
   const tracks = useDexieLiveQueryWithDeps(currentPlaylistId, (id?: string) => {
     if (id) {
@@ -68,17 +67,6 @@ export const usePlayer = defineStore('player', () => {
     () => currentTrack.value,
   )
 
-  const title = useTitle()
-  watch(
-    currentTrack,
-    (val) => {
-      title.value = val?.name ?? 'mscx'
-    },
-    {
-      immediate: true,
-    },
-  )
-
   async function switchToNextTrack() {
     if (!shuffledTracks.value) return
     const index = shuffledTracks.value?.findIndex(
@@ -132,14 +120,6 @@ export const usePlayer = defineStore('player', () => {
     shuffle.value = !shuffle.value
   }
 
-  function openFullscreen() {
-    isFullscreenOpen.value = true
-  }
-
-  function closeFullscreen() {
-    isFullscreenOpen.value = false
-  }
-
   return {
     currentPlaylistId: readonly(currentPlaylistId),
     currentPlaylist,
@@ -148,10 +128,7 @@ export const usePlayer = defineStore('player', () => {
     thumbnailSrc: readonly(thumbnailSrc),
     hasThumbnail: readonly(hasThumbnail),
     shuffle: readonly(shuffle),
-    isFullscreenOpen: readonly(isFullscreenOpen),
     toggleShuffle,
-    openFullscreen,
-    closeFullscreen,
     start,
     stop,
     switchToNextTrack,

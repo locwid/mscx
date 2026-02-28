@@ -11,6 +11,7 @@ provide('playlistId', playlistId)
 
 const player = usePlayer()
 const { currentTrack, currentTrackId } = storeToRefs(player)
+const appStore = useAppStore()
 
 const { list, containerProps, wrapperProps } = useVirtualList(
   computed(() => tracks),
@@ -29,7 +30,7 @@ function handleTrackClick(trackId: string) {
 
 function handleTrackDblClick(trackId: string) {
   player.start(trackId, playlistId)
-  player.openFullscreen()
+  appStore.openFullscreen()
 }
 </script>
 

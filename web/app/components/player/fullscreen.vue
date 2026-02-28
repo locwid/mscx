@@ -9,15 +9,23 @@ const props = defineProps<{
 }>()
 
 const player = usePlayer()
+const appStore = useAppStore()
 const audioPlayer = inject(AUDIO_PLAYER_KEY)!
 const { playing, currentTime, duration } = audioPlayer
+
+const isFullscreenOpen = computed({
+  get: () => appStore.isFullscreenOpen,
+  set: (val) => {
+    if (!val) appStore.closeFullscreen()
+  },
+})
 
 const openInfo = ref(false)
 </script>
 
 <template>
   <UModal
-    v-model:open="player.isFullscreenOpen"
+    v-model:open="isFullscreenOpen"
     fullscreen
     :ui="{
       content:
@@ -37,7 +45,7 @@ const openInfo = ref(false)
             variant="link"
             color="neutral"
             icon="i-lucide-arrow-left"
-            @click="player.closeFullscreen()"
+            @click="appStore.closeFullscreen()"
           />
         </div>
         <div class="relative z-10 flex grow items-center justify-center">
