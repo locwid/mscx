@@ -126,13 +126,13 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
     { immediate: true },
   )
 
-  watch(
+  watchDebounced(
     playing,
     () => {
       updateMediaSessionPlaybackState()
       setupMediaSessionHandlers()
     },
-    { immediate: true },
+    { immediate: true, debounce: 50 },
   )
 
   watch([currentTime, duration], () => {
