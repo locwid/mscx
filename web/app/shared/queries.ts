@@ -3,11 +3,17 @@ import { dexieStorage, type Track } from '~/dexie.storage'
 import { apiGetFile } from './api/actions'
 import { trySyncWithServer } from './api/sync-with-server'
 
+function sortTracks(tracks: Track[]) {
+  return tracks.toSorted(
+    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+  )
+}
+
 export function getAllTracksQuery() {
   return dexieStorage.tracks
     .where('sync')
     .notEqual('deleted')
-    .sortBy('createdAt')
+    .sortBy('createdAt', sortTracks)
 }
 
 export async function addTracksQuery(files: File[]) {
@@ -94,7 +100,7 @@ export async function getPlaylistTracksQuery(id: string) {
     .where('sync')
     .notEqual('deleted')
     .filter((track) => trackIdSet.has(track.id))
-    .sortBy('createdAt')
+    .sortBy('createdAt', sortTracks)
 }
 
 export async function deletePlaylistQuery(id: string) {
