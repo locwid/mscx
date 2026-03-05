@@ -1,27 +1,27 @@
 import {
-  apiAddTrackToPlaylist,
-  apiCreatePlaylist,
+  apiAddTagToTrack,
+  apiCreateTag,
   apiCreateTrack,
-  apiDeletePlaylist,
+  apiDeleteTag,
+  apiDeleteTagFromTrack,
   apiDeleteTrack,
-  apiDeleteTrackFromPlaylist,
-  apiGetPlaylists,
-  apiGetTracks,
+  apiGetTags,
   apiGetThumbnail,
+  apiGetTracks,
 } from './actions'
 import {
-  clearPlaylists,
-  clearPlaylistTracks,
+  clearTags,
+  clearTrackTags,
   clearTracks,
-  createPlaylistTrackRelation,
+  createTrackTagRelation,
   getTrack,
-  listPlaylistsBySync,
-  listPlaylistTracksBySync,
+  listTagsBySync,
   listTracks,
   listTracksBySync,
-  putPlaylists,
-  putPlaylistTracks,
+  listTrackTagsBySync,
+  putTags,
   putTracks,
+  putTrackTags,
   updateTrack,
 } from '../storage/idb-storage'
 import { touchStorageRefresh } from '../storage/refresh'
@@ -80,10 +80,10 @@ export async function trySyncWithServer() {
 }
 
 async function syncWithServer() {
-  await syncPlaylistTracks()
+  await syncTrackTags()
   await syncTracks()
-  await syncPlaylists()
-  await Promise.all([freshTracks(), freshPlaylists()])
+  await syncTags()
+  await Promise.all([freshTracks(), freshTags()])
 }
 
 async function syncTracks() {
@@ -108,31 +108,30 @@ async function syncTracks() {
   }
 }
 
-async function syncPlaylists() {
-  const created = await listPlaylistsBySync('created')
-  for (const playlist of created) {
-    await apiCreatePlaylist({
-      id: playlist.id,
-      name: playlist.name,
-      createdAt: playlist.createdAt.toISOString(),
+async function syncTags() {
+  const created = await listTagsBySync('created')
+  for (const tag of created) {
+    await apiCreateTag({
+      id: tag.id,
+      name: tag.name,
     })
   }
 
-  const deleted = await listPlaylistsBySync('deleted')
-  for (const playlist of deleted) {
-    await apiDeletePlaylist(playlist.id)
+  const deleted = await listTagsBySync('deleted')
+  for (const tag of deleted) {
+    await apiDeleteTag(tag.id)
   }
 }
 
-async function syncPlaylistTracks() {
-  const created = await listPlaylistTracksBySync('created')
-  for (const pair of created) {
-    await apiAddTrackToPlaylist(pair.playlistId, pair.trackId)
+async function syncTrackTags() {
+  const created = await listTrackTagsBySync('created')
+  for (const rel of created) {
+    await apiAddTagToTrack(rel.tagId, rel.trackId)
   }
 
-  const deleted = await listPlaylistTracksBySync('deleted')
-  for (const pair of deleted) {
-    await apiDeleteTrackFromPlaylist(pair.playlistId, pair.trackId)
+  const deleted = await listTrackTagsBySync('deleted')
+  for (const rel of deleted) {
+    await apiDeleteTagFromTrack(rel.tagId, rel.trackId)
   }
 }
 
@@ -161,30 +160,30 @@ async function freshTracks() {
     }),
   )
 
-  // Fetch thumbnails for all tracks
-  await fetchThumbnails(items.map((t) => t.id))
+  await fetchThumbnails(items.map((item) => item.id))
 }
 
-async function freshPlaylists() {
-  const items = await apiGetPlaylists()
+async function freshTags() {
+  const items = await apiGetTags()
   const rels = items.flatMap((item) =>
-    item.tracks.map((t) => ({ playlistId: item.id, trackId: t.id })),
+    item.tracks.map((track) => ({ tagId: item.id, trackId: track.id })),
   )
-  await clearPlaylists()
-  await clearPlaylistTracks()
 
-  await putPlaylists(
-    items.map((playlist) => ({
-      id: playlist.id,
-      name: playlist.name,
+  await clearTags()
+  await clearTrackTags()
+
+  await putTags(
+    items.map((tag) => ({
+      id: tag.id,
+      name: tag.name,
       sync: 'none',
-      createdAt: new Date(playlist.createdAt),
+      createdAt: new Date(tag.createdAt),
     })),
   )
 
-  await putPlaylistTracks(
+  await putTrackTags(
     rels.map((rel) =>
-      createPlaylistTrackRelation(rel.playlistId, rel.trackId, {
+      createTrackTagRelation(rel.tagId, rel.trackId, {
         createdAt: new Date(),
         sync: 'none',
       }),
@@ -192,11 +191,10 @@ async function freshPlaylists() {
   )
 }
 
-async function fetchThumbnails(trackIds: string[]) {
-  for (const id of trackIds) {
+async function fetchThumbnails(trackIDs: string[]) {
+  for (const id of trackIDs) {
     try {
       const track = await getTrack(id)
-      // Only fetch if thumbnail doesn't exist
       if (!track?.thumbnail) {
         const blob = await apiGetThumbnail(id)
         if (blob.size > 0) {
@@ -204,7 +202,7 @@ async function fetchThumbnails(trackIds: string[]) {
         }
       }
     } catch {
-      // Silently skip if thumbnail fetch fails for any reason
+      // Skip on fetch errors to avoid interrupting full sync.
     }
   }
 

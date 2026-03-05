@@ -18,17 +18,16 @@ export interface CreateTrackPayload {
   file: File
 }
 
-export interface PlaylistResponse {
+export interface TagResponse {
   id: string
   name: string
   createdAt: string
   tracks: TrackResponse[]
 }
 
-export interface CreatePlaylistPayload {
+export interface CreateTagPayload {
   id: string
   name: string
-  createdAt: string
 }
 
 export interface ImportYouTubePayload {

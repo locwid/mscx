@@ -16,11 +16,11 @@ export interface Track extends BaseEntity {
   type: string
 }
 
-export interface Playlist extends BaseEntity {
+export interface Tag extends BaseEntity {
   name: string
 }
 
-export interface PlaylistTracks extends BaseEntity {
-  playlistId: string
+export interface TrackTag extends BaseEntity {
+  tagId: string
   trackId: string
 }

@@ -1,14 +1,10 @@
 <script lang="ts" setup>
 import { useVirtualList } from '@vueuse/core'
-import { PLAYLIST_ID_KEY } from '~/shared/constants/keys'
 import type { Track } from '~/shared/storage/types'
 
-const { tracks = [], playlistId } = defineProps<{
+const { tracks = [] } = defineProps<{
   tracks?: Track[]
-  playlistId?: string
 }>()
-
-provide(PLAYLIST_ID_KEY, playlistId)
 
 const player = usePlayer()
 const { currentTrack, currentTrackId } = storeToRefs(player)
@@ -26,11 +22,11 @@ const height = computed(
 )
 
 function handleTrackClick(trackId: string) {
-  player.start(trackId, playlistId)
+  player.start(trackId)
 }
 
 function handleTrackDblClick(trackId: string) {
-  player.start(trackId, playlistId)
+  player.start(trackId)
   appStore.openFullscreen()
 }
 </script>

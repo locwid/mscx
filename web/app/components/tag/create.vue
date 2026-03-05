@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import type { FormSubmitEvent } from '@nuxt/ui'
 import z from 'zod'
-import { addPlaylistQuery } from '~/shared/queries'
+import { addTagQuery } from '~/shared/queries'
 
 const schema = z.object({
   name: z.string().min(1),
@@ -14,14 +14,15 @@ const state = reactive<Schema>({
   name: '',
 })
 
-function onSubmit(event: FormSubmitEvent<Schema>) {
-  addPlaylistQuery(event.data.name)
+async function onSubmit(event: FormSubmitEvent<Schema>) {
+  await addTagQuery(event.data.name)
+  state.name = ''
   open.value = false
 }
 </script>
 
 <template>
-  <UDrawer v-model:open="open" title="new playlist">
+  <UDrawer v-model:open="open" title="new tag">
     <slot />
     <template #body>
       <UForm

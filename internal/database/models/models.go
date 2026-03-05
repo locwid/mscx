@@ -14,6 +14,7 @@ type Track struct {
 	Type      string    `json:"type"`
 	YoutubeID string    `json:"youtubeId" gorm:"uniqueIndex"`
 	CreatedAt time.Time `json:"createdAt"`
+	Tags      []*Tag    `json:"tags,omitempty" gorm:"many2many:track_tags;"`
 }
 
 func (t Track) GetFilename() string {
@@ -21,9 +22,9 @@ func (t Track) GetFilename() string {
 	return strings.Join([]string{t.ID, ext}, "")
 }
 
-type Playlist struct {
+type Tag struct {
 	ID        string    `json:"id" gorm:"primaryKey"`
 	Name      string    `json:"name"`
 	CreatedAt time.Time `json:"createdAt"`
-	Tracks    []*Track  `json:"tracks" gorm:"many2many:playlist_tracks;"`
+	Tracks    []*Track  `json:"tracks,omitempty" gorm:"many2many:track_tags;"`
 }

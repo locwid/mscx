@@ -38,7 +38,9 @@ const openInfo = ref(false)
           <div class="text-muted text-lg">
             playing
             <span class="text-primary">{{
-              player.currentPlaylist?.name || 'mscx'
+              player.selectedTags?.length
+                ? player.selectedTags.map((tag) => tag.name).join(', ')
+                : 'all tracks'
             }}</span>
           </div>
           <UButton

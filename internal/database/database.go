@@ -11,6 +11,13 @@ func InitDatabase(dbName string) *gorm.DB {
 	if err != nil {
 		panic("failed to connect database")
 	}
-	db.AutoMigrate(&models.Track{}, &models.Playlist{})
+	migrator := db.Migrator()
+	if migrator.HasTable("playlist_tracks") {
+		_ = migrator.DropTable("playlist_tracks")
+	}
+	if migrator.HasTable("playlists") {
+		_ = migrator.DropTable("playlists")
+	}
+	db.AutoMigrate(&models.Track{}, &models.Tag{})
 	return db
 }

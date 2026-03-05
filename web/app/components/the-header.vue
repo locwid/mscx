@@ -1,8 +1,10 @@
 <script lang="ts" setup>
-import { trySyncWithServer } from '~/shared/api/sync-with-server';
+import { trySyncWithServer } from '~/shared/api/sync-with-server'
 
 const online = useOnline()
 const { headerTitle } = storeToRefs(useAppStore())
+const player = usePlayer()
+const { selectedTagIDs } = storeToRefs(player)
 </script>
 
 <template>
@@ -20,13 +22,27 @@ const { headerTitle } = storeToRefs(useAppStore())
       </span>
     </span>
     <div class="flex gap-2">
-      <UButton icon="i-lucide-cloud-sync" variant="outline" color="neutral" @click="trySyncWithServer" loading-auto />
+      <UButton
+        icon="i-lucide-cloud-sync"
+        variant="outline"
+        color="neutral"
+        @click="trySyncWithServer"
+        loading-auto
+      />
       <TrackUpload>
         <UButton icon="i-lucide-upload" variant="outline" color="neutral" />
       </TrackUpload>
-      <PlaylistCreate>
-        <UButton icon="i-lucide-book-plus" variant="outline" color="neutral" />
-      </PlaylistCreate>
+      <TagFilter>
+        <UChip
+          inset
+          :show="selectedTagIDs.length > 0"
+          :text="String(selectedTagIDs.length)"
+          color="primary"
+          size="2xl"
+        >
+          <UButton icon="i-lucide-tags" variant="outline" color="neutral" />
+        </UChip>
+      </TagFilter>
       <TheSidebar>
         <UButton
           icon="i-lucide-panel-right"

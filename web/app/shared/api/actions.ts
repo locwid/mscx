@@ -1,10 +1,10 @@
 import { apiFetch } from './fetch'
 import type {
-  CreatePlaylistPayload,
+  CreateTagPayload,
   CreateTrackPayload,
   HealthResponse,
   ImportYouTubePayload,
-  PlaylistResponse,
+  TagResponse,
   TrackResponse,
 } from './types'
 
@@ -36,19 +36,19 @@ export const apiDeleteTrack = (id: string) => {
   return apiFetch(`/track/${id}`, { method: 'DELETE' })
 }
 
-export const apiGetPlaylists = () => {
-  return apiFetch<PlaylistResponse[]>('/playlist', { method: 'GET' })
+export const apiGetTags = () => {
+  return apiFetch<TagResponse[]>('/tag', { method: 'GET' })
 }
 
-export const apiCreatePlaylist = (payload: CreatePlaylistPayload) => {
-  return apiFetch<PlaylistResponse[]>('/playlist', {
+export const apiCreateTag = (payload: CreateTagPayload) => {
+  return apiFetch<TagResponse[]>('/tag', {
     method: 'POST',
     body: payload,
   })
 }
 
-export const apiDeletePlaylist = (id: string) => {
-  return apiFetch(`/playlist/${id}`, { method: 'DELETE' })
+export const apiDeleteTag = (id: string) => {
+  return apiFetch(`/tag/${id}`, { method: 'DELETE' })
 }
 
 export const apiImportYouTube = (payload: ImportYouTubePayload) => {
@@ -58,17 +58,14 @@ export const apiImportYouTube = (payload: ImportYouTubePayload) => {
   })
 }
 
-export const apiAddTrackToPlaylist = (playlistId: string, trackId: string) => {
-  return apiFetch(`/playlist/${playlistId}/track/${trackId}`, {
+export const apiAddTagToTrack = (tagId: string, trackId: string) => {
+  return apiFetch(`/tag/${tagId}/track/${trackId}`, {
     method: 'POST',
   })
 }
 
-export const apiDeleteTrackFromPlaylist = (
-  playlistId: string,
-  trackId: string,
-) => {
-  return apiFetch(`/playlist/${playlistId}/track/${trackId}`, {
+export const apiDeleteTagFromTrack = (tagId: string, trackId: string) => {
+  return apiFetch(`/tag/${tagId}/track/${trackId}`, {
     method: 'DELETE',
   })
 }

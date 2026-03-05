@@ -14,9 +14,9 @@ const navigation: NavigationMenuItem[] = [
     onSelect: close,
   },
   {
-    label: 'playlists',
-    icon: 'i-lucide-book-audio',
-    to: '/playlists',
+    label: 'tags',
+    icon: 'i-lucide-tags',
+    to: '/tags',
     class: 'text-lg',
     onSelect: close,
   },

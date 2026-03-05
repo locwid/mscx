@@ -1,26 +1,41 @@
 <script lang="ts" setup>
 import type { CheckboxGroupItem } from '@nuxt/ui'
-import { getAllPlaylistsQuery } from '~/shared/queries'
+import { getTrackTagOptionsQuery } from '~/shared/queries'
+
+const { trackId } = defineProps<{
+  trackId: string
+}>()
 
 defineEmits<{
   (e: 'confirm', idList: string[]): void
 }>()
 
-const playlists = useIDB(() => getAllPlaylistsQuery())
+const options = useIDBWithDeps(
+  () => trackId,
+  (id) => getTrackTagOptionsQuery(id),
+)
 
 const items = computed<CheckboxGroupItem[]>(
   () =>
-    playlists.value?.map((p) => ({
-      label: p.name,
-      value: p.id,
+    options.value?.allTags.map((tag) => ({
+      label: tag.name,
+      value: tag.id,
     })) ?? [],
 )
 
-const value = ref([])
+const value = ref<string[]>([])
+
+watch(
+  options,
+  (next) => {
+    value.value = next ? Array.from(next.assigned) : []
+  },
+  { immediate: true },
+)
 </script>
 
 <template>
-  <USlideover title="pick playlists" :ui="{ footer: 'flex flex-col gap-2' }">
+  <USlideover title="pick tags" :ui="{ footer: 'flex flex-col gap-2' }">
     <slot />
     <template #body>
       <UCheckboxGroup v-model="value" :items="items" size="xl" variant="card" />

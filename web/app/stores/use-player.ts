@@ -1,22 +1,30 @@
 import {
   getAllTracksQuery,
-  getPlaylistTracksQuery,
-  getPlaylistByIdQuery,
+  getAllTagsQuery,
+  getTracksByTagIdsQuery,
 } from '~/shared/queries'
 import { type Track } from '~/shared/storage/types'
 
 export const usePlayer = defineStore('player', () => {
-  const currentPlaylistId = ref<string | null>(null)
+  const selectedTagIDs = ref<string[]>([])
   const currentTrackId = ref<string | null>(null)
   const shuffle = ref(false)
   const shuffleQueue = ref<Track[]>([])
 
-  const tracks = useIDBWithDeps(currentPlaylistId, (id) =>
-    id ? getPlaylistTracksQuery(id) : getAllTracksQuery(),
+  const tracks = useIDBWithDeps(selectedTagIDs, (tagIDs) =>
+    tagIDs.length ? getTracksByTagIdsQuery(tagIDs) : getAllTracksQuery(),
   )
 
-  const currentPlaylist = useIDBWithDeps(currentPlaylistId, (id) =>
-    id ? getPlaylistByIdQuery(id) : null,
+  const selectedTags = useIDBWithDeps(
+    selectedTagIDs,
+    async (tagIDs) => {
+      const tags = await getAllTagsQuery()
+      const selected = new Set(tagIDs)
+      return tags.filter((tag) => selected.has(tag.id))
+    },
+    {
+      initialValue: [],
+    },
   )
 
   function generateShuffleQueue() {
@@ -102,9 +110,7 @@ export const usePlayer = defineStore('player', () => {
     currentTrackId.value = shuffledTracks.value[prevIndex]?.id ?? null
   }
 
-  async function start(trackId?: string, playlistId?: string) {
-    currentPlaylistId.value = playlistId ?? null
-
+  async function start(trackId?: string) {
     if (trackId) {
       currentTrackId.value = trackId
       return
@@ -116,7 +122,7 @@ export const usePlayer = defineStore('player', () => {
           timeout: 1500,
         })
       } catch {
-        // Keep playlist selected even if loading timed out.
+        // Keep selected tags even if loading timed out.
       }
     }
 
@@ -138,8 +144,11 @@ export const usePlayer = defineStore('player', () => {
   }
 
   async function stop() {
-    currentPlaylistId.value = null
     currentTrackId.value = null
+  }
+
+  function setSelectedTagIDs(tagIDs: string[]) {
+    selectedTagIDs.value = Array.from(new Set(tagIDs))
   }
 
   function toggleShuffle() {
@@ -147,13 +156,15 @@ export const usePlayer = defineStore('player', () => {
   }
 
   return {
-    currentPlaylistId: readonly(currentPlaylistId),
-    currentPlaylist,
+    selectedTagIDs: readonly(selectedTagIDs),
+    selectedTags,
     currentTrackId,
     currentTrack,
+    tracks,
     thumbnailSrc: readonly(thumbnailSrc),
     hasThumbnail: readonly(hasThumbnail),
     shuffle: readonly(shuffle),
+    setSelectedTagIDs,
     toggleShuffle,
     start,
     stop,

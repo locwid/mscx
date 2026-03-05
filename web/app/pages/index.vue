@@ -1,9 +1,8 @@
 <script lang="ts" setup>
-import { getAllTracksQuery } from '~/shared/queries'
-
 useHeaderTitle('tracks')
 
-const tracks = useIDB(() => getAllTracksQuery())
+const player = usePlayer()
+const { tracks } = storeToRefs(player)
 </script>
 
 <template>

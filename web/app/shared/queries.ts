@@ -2,21 +2,21 @@ import { nanoid } from 'nanoid'
 import { apiGetFile, apiImportYouTube } from './api/actions'
 import { scheduleSyncWithServer } from './api/sync-with-server'
 import {
-  createPlaylistTrackRelation,
-  getPlaylist,
-  listPlaylistTracksByPlaylistId,
-  listPlaylistTracksByTrackId,
-  listPlaylists,
+  createTrackTagRelation,
+  getTag,
+  listTags,
+  listTrackTagsByTagId,
+  listTrackTagsByTrackId,
   listTracks,
-  putPlaylist,
-  putPlaylistTrack,
+  putTag,
+  putTrackTag,
   putTracks,
-  updatePlaylist,
-  updatePlaylistTrack,
+  updateTag,
   updateTrack,
+  updateTrackTag,
 } from './storage/idb-storage'
 import { touchStorageRefresh } from './storage/refresh'
-import type { Track } from './storage/types'
+import type { Tag, Track } from './storage/types'
 
 type AddTrackFailure = {
   name: string
@@ -39,9 +39,15 @@ function sortByCreatedAt<T extends { createdAt: Date }>(items: T[]) {
   )
 }
 
+function toActiveItems<T extends { sync: 'none' | 'created' | 'deleted' }>(
+  items: T[],
+) {
+  return items.filter((item) => item.sync !== 'deleted')
+}
+
 export async function getAllTracksQuery() {
   const tracks = await listTracks()
-  return sortByCreatedAt(tracks.filter((track) => track.sync !== 'deleted'))
+  return sortByCreatedAt(toActiveItems(tracks))
 }
 
 export async function addTracksQuery(files: File[]) {
@@ -108,10 +114,10 @@ export async function deleteTrackQuery(id: string) {
     file: undefined,
   })
 
-  const relations = await listPlaylistTracksByTrackId(id)
+  const relations = await listTrackTagsByTrackId(id)
   await Promise.all(
     relations.map((relation) =>
-      updatePlaylistTrack(relation.playlistId, relation.trackId, {
+      updateTrackTag(relation.tagId, relation.trackId, {
         sync: 'deleted',
       }),
     ),
@@ -131,45 +137,33 @@ export async function unloadTrackQuery(id: string) {
   await touchStorageRefresh()
 }
 
-export async function getAllPlaylistsQuery() {
-  const playlists = await listPlaylists()
-  return sortByCreatedAt(
-    playlists.filter((playlist) => playlist.sync !== 'deleted'),
-  )
+export async function getAllTagsQuery() {
+  const tags = await listTags()
+  return sortByCreatedAt(toActiveItems(tags))
 }
 
-export function getPlaylistByIdQuery(id: string) {
-  return getPlaylist(id)
+export async function getTagByIdQuery(id: string) {
+  return getTag(id)
 }
 
-export async function addPlaylistQuery(name: string) {
-  await putPlaylist({
+export async function addTagQuery(name: string) {
+  await putTag({
     id: nanoid(),
     name,
     sync: 'created',
     createdAt: new Date(),
   })
+
   await finalizeLocalMutation()
 }
 
-export async function getPlaylistTracksQuery(id: string) {
-  const pairs = await listPlaylistTracksByPlaylistId(id)
-  const trackIdSet = new Set(pairs.map((p) => p.trackId))
-  const tracks = await listTracks()
-  return sortByCreatedAt(
-    tracks.filter(
-      (track) => track.sync !== 'deleted' && trackIdSet.has(track.id),
-    ),
-  )
-}
+export async function deleteTagQuery(id: string) {
+  await updateTag(id, { sync: 'deleted' })
 
-export async function deletePlaylistQuery(id: string) {
-  await updatePlaylist(id, { sync: 'deleted' })
-
-  const relations = await listPlaylistTracksByPlaylistId(id)
+  const relations = await listTrackTagsByTagId(id)
   await Promise.all(
     relations.map((relation) =>
-      updatePlaylistTrack(relation.playlistId, relation.trackId, {
+      updateTrackTag(relation.tagId, relation.trackId, {
         sync: 'deleted',
       }),
     ),
@@ -178,25 +172,97 @@ export async function deletePlaylistQuery(id: string) {
   await finalizeLocalMutation()
 }
 
-export async function addTrackToPlaylistQuery(
-  playlistId: string,
-  trackId: string,
-) {
-  await putPlaylistTrack(
-    createPlaylistTrackRelation(playlistId, trackId, {
+export async function getTrackTagsQuery(trackId: string) {
+  const [tags, relations] = await Promise.all([
+    listTags(),
+    listTrackTagsByTrackId(trackId),
+  ])
+
+  const activeTagIDs = new Set(
+    relations
+      .filter((relation) => relation.sync !== 'deleted')
+      .map((r) => r.tagId),
+  )
+
+  return sortByCreatedAt(
+    tags.filter((tag) => tag.sync !== 'deleted' && activeTagIDs.has(tag.id)),
+  )
+}
+
+export async function getTracksByTagIdsQuery(tagIDs: string[]) {
+  const cleanTagIDs = Array.from(new Set(tagIDs.filter(Boolean)))
+  if (!cleanTagIDs.length) {
+    return getAllTracksQuery()
+  }
+
+  const relationGroups = await Promise.all(
+    cleanTagIDs.map((tagID) => listTrackTagsByTagId(tagID)),
+  )
+
+  // Strict AND: intersect track ids for each selected tag.
+  const trackIDSets = relationGroups.map(
+    (relations) =>
+      new Set(
+        relations
+          .filter((relation) => relation.sync !== 'deleted')
+          .map((relation) => relation.trackId),
+      ),
+  )
+
+  const [firstSet, ...restSets] = trackIDSets
+  if (!firstSet?.size) {
+    return []
+  }
+
+  const intersection = new Set(
+    Array.from(firstSet).filter((trackID) =>
+      restSets.every((set) => set.has(trackID)),
+    ),
+  )
+
+  if (!intersection.size) {
+    return []
+  }
+
+  const tracks = await listTracks()
+  return sortByCreatedAt(
+    tracks.filter(
+      (track) => track.sync !== 'deleted' && intersection.has(track.id),
+    ),
+  )
+}
+
+export async function addTagToTrackQuery(tagID: string, trackID: string) {
+  await putTrackTag(
+    createTrackTagRelation(tagID, trackID, {
       createdAt: new Date(),
       sync: 'created',
     }),
   )
+
   await finalizeLocalMutation()
 }
 
-export async function deleteTrackFromPlaylistQuery(
-  playlistId: string,
-  trackId: string,
-) {
-  await updatePlaylistTrack(playlistId, trackId, {
+export async function deleteTagFromTrackQuery(tagID: string, trackID: string) {
+  await updateTrackTag(tagID, trackID, {
     sync: 'deleted',
   })
+
   await finalizeLocalMutation()
+}
+
+export async function getTrackTagOptionsQuery(trackID: string) {
+  const [allTags, assignedTags] = await Promise.all([
+    getAllTagsQuery(),
+    getTrackTagsQuery(trackID),
+  ])
+
+  const assigned = new Set(assignedTags.map((tag) => tag.id))
+  return {
+    allTags,
+    assigned,
+  } satisfies {
+    allTags: Tag[]
+    assigned: Set<string>
+  }
 }

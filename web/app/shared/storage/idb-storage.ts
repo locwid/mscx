@@ -7,17 +7,17 @@ import {
   setMany,
   update,
 } from 'idb-keyval'
-import type { Playlist, PlaylistTracks, Sync, Track } from './types'
+import type { Sync, Tag, Track, TrackTag } from './types'
 
 export const idbStore = createStore('mscx-keyval-db', 'mscx-keyval')
 
 const TRACK_PREFIX = 'track:'
-const PLAYLIST_PREFIX = 'playlist:'
-const PLAYLIST_TRACK_PREFIX = 'playlistTrack:'
+const TAG_PREFIX = 'tag:'
+const TRACK_TAG_PREFIX = 'trackTag:'
 
 const TRACK_IDS_KEY = 'index:tracks:all'
-const PLAYLIST_IDS_KEY = 'index:playlists:all'
-const PLAYLIST_TRACK_IDS_KEY = 'index:playlistTracks:all'
+const TAG_IDS_KEY = 'index:tags:all'
+const TRACK_TAG_IDS_KEY = 'index:trackTags:all'
 
 const TRACK_SYNC_INDEX = {
   none: 'index:tracks:sync:none',
@@ -25,40 +25,40 @@ const TRACK_SYNC_INDEX = {
   deleted: 'index:tracks:sync:deleted',
 } as const
 
-const PLAYLIST_SYNC_INDEX = {
-  none: 'index:playlists:sync:none',
-  created: 'index:playlists:sync:created',
-  deleted: 'index:playlists:sync:deleted',
+const TAG_SYNC_INDEX = {
+  none: 'index:tags:sync:none',
+  created: 'index:tags:sync:created',
+  deleted: 'index:tags:sync:deleted',
 } as const
 
-const PLAYLIST_TRACK_SYNC_INDEX = {
-  none: 'index:playlistTracks:sync:none',
-  created: 'index:playlistTracks:sync:created',
-  deleted: 'index:playlistTracks:sync:deleted',
+const TRACK_TAG_SYNC_INDEX = {
+  none: 'index:trackTags:sync:none',
+  created: 'index:trackTags:sync:created',
+  deleted: 'index:trackTags:sync:deleted',
 } as const
 
 function trackKey(id: string) {
   return `${TRACK_PREFIX}${id}`
 }
 
-function playlistKey(id: string) {
-  return `${PLAYLIST_PREFIX}${id}`
+function tagKey(id: string) {
+  return `${TAG_PREFIX}${id}`
 }
 
-function relationId(playlistId: string, trackId: string) {
-  return `${playlistId}:${trackId}`
+function relationID(tagId: string, trackId: string) {
+  return `${tagId}:${trackId}`
 }
 
-function playlistTrackKey(id: string) {
-  return `${PLAYLIST_TRACK_PREFIX}${id}`
+function trackTagKey(id: string) {
+  return `${TRACK_TAG_PREFIX}${id}`
 }
 
-function playlistTrackByPlaylistIndex(playlistId: string) {
-  return `index:playlistTracks:playlist:${playlistId}`
+function trackTagByTagIndex(tagId: string) {
+  return `index:trackTags:tag:${tagId}`
 }
 
-function playlistTrackByTrackIndex(trackId: string) {
-  return `index:playlistTracks:track:${trackId}`
+function trackTagByTrackIndex(trackId: string) {
+  return `index:trackTags:track:${trackId}`
 }
 
 async function getIndex(key: string): Promise<string[]> {
@@ -93,6 +93,7 @@ async function readByIds<T>(
   keyBuilder: (id: string) => string,
 ): Promise<T[]> {
   if (!ids.length) return []
+
   return getMany<T>(
     ids.map((id) => keyBuilder(id)),
     idbStore,
@@ -108,6 +109,7 @@ async function moveSyncIndex(
   if (prevSync && prevSync !== nextSync) {
     await removeFromIndex(syncIndex[prevSync], id)
   }
+
   await addToIndex(syncIndex[nextSync], id)
 }
 
@@ -141,6 +143,7 @@ export async function putTracks(tracks: Track[]) {
 
   const keys = tracks.map((track) => trackKey(track.id))
   const prevItems = await getMany<Track>(keys, idbStore)
+
   await setMany(
     tracks.map((track, index) => [keys[index]!, track] as const),
     idbStore,
@@ -183,10 +186,12 @@ export async function updateTrack(id: string, patch: Partial<Track>) {
 
 export async function clearTracks() {
   const ids = await getIndex(TRACK_IDS_KEY)
+
   await delMany(
     ids.map((id) => trackKey(id)),
     idbStore,
   )
+
   await setMany(
     [
       emptyIndexEntry(TRACK_IDS_KEY),
@@ -196,61 +201,57 @@ export async function clearTracks() {
   )
 }
 
-export async function getPlaylist(id: string): Promise<Playlist | undefined> {
-  return get<Playlist>(playlistKey(id), idbStore)
+export async function getTag(id: string): Promise<Tag | undefined> {
+  return get<Tag>(tagKey(id), idbStore)
 }
 
-export async function listPlaylists(): Promise<Playlist[]> {
-  const ids = await getIndex(PLAYLIST_IDS_KEY)
-  return readByIds<Playlist>(ids, playlistKey)
+export async function listTags(): Promise<Tag[]> {
+  const ids = await getIndex(TAG_IDS_KEY)
+  return readByIds<Tag>(ids, tagKey)
 }
 
-export async function listPlaylistsBySync(sync: Sync): Promise<Playlist[]> {
-  const ids = await getIndex(PLAYLIST_SYNC_INDEX[sync])
-  return readByIds<Playlist>(ids, playlistKey)
+export async function listTagsBySync(sync: Sync): Promise<Tag[]> {
+  const ids = await getIndex(TAG_SYNC_INDEX[sync])
+  return readByIds<Tag>(ids, tagKey)
 }
 
-export async function putPlaylist(playlist: Playlist) {
-  const prev = await getPlaylist(playlist.id)
-  await set(playlistKey(playlist.id), playlist, idbStore)
-  await addToIndex(PLAYLIST_IDS_KEY, playlist.id)
-  await moveSyncIndex(
-    playlist.id,
-    playlist.sync,
-    prev?.sync,
-    PLAYLIST_SYNC_INDEX,
-  )
+export async function putTag(tag: Tag) {
+  const prev = await getTag(tag.id)
+  await set(tagKey(tag.id), tag, idbStore)
+  await addToIndex(TAG_IDS_KEY, tag.id)
+  await moveSyncIndex(tag.id, tag.sync, prev?.sync, TAG_SYNC_INDEX)
 }
 
-export async function putPlaylists(playlists: Playlist[]) {
-  if (!playlists.length) return
+export async function putTags(tags: Tag[]) {
+  if (!tags.length) return
 
-  const keys = playlists.map((playlist) => playlistKey(playlist.id))
-  const prevItems = await getMany<Playlist>(keys, idbStore)
+  const keys = tags.map((tag) => tagKey(tag.id))
+  const prevItems = await getMany<Tag>(keys, idbStore)
+
   await setMany(
-    playlists.map((playlist, index) => [keys[index]!, playlist] as const),
+    tags.map((tag, index) => [keys[index]!, tag] as const),
     idbStore,
   )
 
   await Promise.all(
-    playlists.map(async (playlist, index) => {
-      await addToIndex(PLAYLIST_IDS_KEY, playlist.id)
+    tags.map(async (tag, index) => {
+      await addToIndex(TAG_IDS_KEY, tag.id)
       await moveSyncIndex(
-        playlist.id,
-        playlist.sync,
+        tag.id,
+        tag.sync,
         prevItems[index]?.sync,
-        PLAYLIST_SYNC_INDEX,
+        TAG_SYNC_INDEX,
       )
     }),
   )
 }
 
-export async function updatePlaylist(id: string, patch: Partial<Playlist>) {
+export async function updateTag(id: string, patch: Partial<Tag>) {
   let prevSync: Sync | undefined
   let nextSync: Sync | undefined
 
-  await update<Playlist | undefined>(
-    playlistKey(id),
+  await update<Tag | undefined>(
+    tagKey(id),
     (prev) => {
       if (!prev) return undefined
       prevSync = prev.sync
@@ -263,86 +264,83 @@ export async function updatePlaylist(id: string, patch: Partial<Playlist>) {
 
   if (!nextSync) return
 
-  await addToIndex(PLAYLIST_IDS_KEY, id)
-  await moveSyncIndex(id, nextSync, prevSync, PLAYLIST_SYNC_INDEX)
+  await addToIndex(TAG_IDS_KEY, id)
+  await moveSyncIndex(id, nextSync, prevSync, TAG_SYNC_INDEX)
 }
 
-export async function clearPlaylists() {
-  const ids = await getIndex(PLAYLIST_IDS_KEY)
+export async function clearTags() {
+  const ids = await getIndex(TAG_IDS_KEY)
+
   await delMany(
-    ids.map((id) => playlistKey(id)),
+    ids.map((id) => tagKey(id)),
     idbStore,
   )
+
   await setMany(
     [
-      emptyIndexEntry(PLAYLIST_IDS_KEY),
-      ...Object.values(PLAYLIST_SYNC_INDEX).map((key) => emptyIndexEntry(key)),
+      emptyIndexEntry(TAG_IDS_KEY),
+      ...Object.values(TAG_SYNC_INDEX).map((key) => emptyIndexEntry(key)),
     ],
     idbStore,
   )
 }
 
-export async function getPlaylistTrackByRelationId(
+export async function getTrackTagByRelationID(
   id: string,
-): Promise<PlaylistTracks | undefined> {
-  return get<PlaylistTracks>(playlistTrackKey(id), idbStore)
+): Promise<TrackTag | undefined> {
+  return get<TrackTag>(trackTagKey(id), idbStore)
 }
 
-export async function getPlaylistTrack(
-  playlistId: string,
+export async function getTrackTag(
+  tagId: string,
   trackId: string,
-): Promise<PlaylistTracks | undefined> {
-  return getPlaylistTrackByRelationId(relationId(playlistId, trackId))
+): Promise<TrackTag | undefined> {
+  return getTrackTagByRelationID(relationID(tagId, trackId))
 }
 
-export async function listPlaylistTracks(): Promise<PlaylistTracks[]> {
-  const ids = await getIndex(PLAYLIST_TRACK_IDS_KEY)
-  return readByIds<PlaylistTracks>(ids, playlistTrackKey)
+export async function listTrackTags(): Promise<TrackTag[]> {
+  const ids = await getIndex(TRACK_TAG_IDS_KEY)
+  return readByIds<TrackTag>(ids, trackTagKey)
 }
 
-export async function listPlaylistTracksBySync(
-  sync: Sync,
-): Promise<PlaylistTracks[]> {
-  const ids = await getIndex(PLAYLIST_TRACK_SYNC_INDEX[sync])
-  return readByIds<PlaylistTracks>(ids, playlistTrackKey)
+export async function listTrackTagsBySync(sync: Sync): Promise<TrackTag[]> {
+  const ids = await getIndex(TRACK_TAG_SYNC_INDEX[sync])
+  return readByIds<TrackTag>(ids, trackTagKey)
 }
 
-export async function listPlaylistTracksByPlaylistId(
-  playlistId: string,
-): Promise<PlaylistTracks[]> {
-  const ids = await getIndex(playlistTrackByPlaylistIndex(playlistId))
-  return readByIds<PlaylistTracks>(ids, playlistTrackKey)
+export async function listTrackTagsByTagId(tagId: string): Promise<TrackTag[]> {
+  const ids = await getIndex(trackTagByTagIndex(tagId))
+  return readByIds<TrackTag>(ids, trackTagKey)
 }
 
-export async function listPlaylistTracksByTrackId(
+export async function listTrackTagsByTrackId(
   trackId: string,
-): Promise<PlaylistTracks[]> {
-  const ids = await getIndex(playlistTrackByTrackIndex(trackId))
-  return readByIds<PlaylistTracks>(ids, playlistTrackKey)
+): Promise<TrackTag[]> {
+  const ids = await getIndex(trackTagByTrackIndex(trackId))
+  return readByIds<TrackTag>(ids, trackTagKey)
 }
 
-export async function putPlaylistTrack(relation: PlaylistTracks) {
-  const prev = await getPlaylistTrackByRelationId(relation.id)
-  await set(playlistTrackKey(relation.id), relation, idbStore)
-  await addToIndex(PLAYLIST_TRACK_IDS_KEY, relation.id)
-  await addToIndex(
-    playlistTrackByPlaylistIndex(relation.playlistId),
-    relation.id,
-  )
-  await addToIndex(playlistTrackByTrackIndex(relation.trackId), relation.id)
+export async function putTrackTag(relation: TrackTag) {
+  const prev = await getTrackTagByRelationID(relation.id)
+
+  await set(trackTagKey(relation.id), relation, idbStore)
+  await addToIndex(TRACK_TAG_IDS_KEY, relation.id)
+  await addToIndex(trackTagByTagIndex(relation.tagId), relation.id)
+  await addToIndex(trackTagByTrackIndex(relation.trackId), relation.id)
+
   await moveSyncIndex(
     relation.id,
     relation.sync,
     prev?.sync,
-    PLAYLIST_TRACK_SYNC_INDEX,
+    TRACK_TAG_SYNC_INDEX,
   )
 }
 
-export async function putPlaylistTracks(relations: PlaylistTracks[]) {
+export async function putTrackTags(relations: TrackTag[]) {
   if (!relations.length) return
 
-  const keys = relations.map((relation) => playlistTrackKey(relation.id))
-  const prevItems = await getMany<PlaylistTracks>(keys, idbStore)
+  const keys = relations.map((relation) => trackTagKey(relation.id))
+  const prevItems = await getMany<TrackTag>(keys, idbStore)
 
   await setMany(
     relations.map((relation, index) => [keys[index]!, relation] as const),
@@ -351,33 +349,30 @@ export async function putPlaylistTracks(relations: PlaylistTracks[]) {
 
   await Promise.all(
     relations.map(async (relation, index) => {
-      await addToIndex(PLAYLIST_TRACK_IDS_KEY, relation.id)
-      await addToIndex(
-        playlistTrackByPlaylistIndex(relation.playlistId),
-        relation.id,
-      )
-      await addToIndex(playlistTrackByTrackIndex(relation.trackId), relation.id)
+      await addToIndex(TRACK_TAG_IDS_KEY, relation.id)
+      await addToIndex(trackTagByTagIndex(relation.tagId), relation.id)
+      await addToIndex(trackTagByTrackIndex(relation.trackId), relation.id)
       await moveSyncIndex(
         relation.id,
         relation.sync,
         prevItems[index]?.sync,
-        PLAYLIST_TRACK_SYNC_INDEX,
+        TRACK_TAG_SYNC_INDEX,
       )
     }),
   )
 }
 
-export async function updatePlaylistTrack(
-  playlistId: string,
+export async function updateTrackTag(
+  tagId: string,
   trackId: string,
-  patch: Partial<PlaylistTracks>,
+  patch: Partial<TrackTag>,
 ) {
-  const id = relationId(playlistId, trackId)
+  const id = relationID(tagId, trackId)
   let prevSync: Sync | undefined
   let nextSync: Sync | undefined
 
-  await update<PlaylistTracks | undefined>(
-    playlistTrackKey(id),
+  await update<TrackTag | undefined>(
+    trackTagKey(id),
     (prev) => {
       if (!prev) return undefined
       prevSync = prev.sync
@@ -390,48 +385,46 @@ export async function updatePlaylistTrack(
 
   if (!nextSync) return
 
-  await addToIndex(PLAYLIST_TRACK_IDS_KEY, id)
-  await addToIndex(playlistTrackByPlaylistIndex(playlistId), id)
-  await addToIndex(playlistTrackByTrackIndex(trackId), id)
-  await moveSyncIndex(id, nextSync, prevSync, PLAYLIST_TRACK_SYNC_INDEX)
+  await addToIndex(TRACK_TAG_IDS_KEY, id)
+  await addToIndex(trackTagByTagIndex(tagId), id)
+  await addToIndex(trackTagByTrackIndex(trackId), id)
+  await moveSyncIndex(id, nextSync, prevSync, TRACK_TAG_SYNC_INDEX)
 }
 
-export async function clearPlaylistTracks() {
-  const all = await listPlaylistTracks()
+export async function clearTrackTags() {
+  const all = await listTrackTags()
+
   await delMany(
-    all.map((item) => playlistTrackKey(item.id)),
+    all.map((item) => trackTagKey(item.id)),
     idbStore,
   )
+
   const resetEntries: Array<[string, string[]]> = [
-    emptyIndexEntry(PLAYLIST_TRACK_IDS_KEY),
-    ...Object.values(PLAYLIST_TRACK_SYNC_INDEX).map((key) =>
-      emptyIndexEntry(key),
-    ),
+    emptyIndexEntry(TRACK_TAG_IDS_KEY),
+    ...Object.values(TRACK_TAG_SYNC_INDEX).map((key) => emptyIndexEntry(key)),
   ]
 
-  const playlistKeys = new Set(
-    all.map((item) => playlistTrackByPlaylistIndex(item.playlistId)),
-  )
+  const tagKeys = new Set(all.map((item) => trackTagByTagIndex(item.tagId)))
   const trackKeys = new Set(
-    all.map((item) => playlistTrackByTrackIndex(item.trackId)),
+    all.map((item) => trackTagByTrackIndex(item.trackId)),
   )
 
   resetEntries.push(
-    ...Array.from(playlistKeys).map((key) => emptyIndexEntry(key)),
+    ...Array.from(tagKeys).map((key) => emptyIndexEntry(key)),
     ...Array.from(trackKeys).map((key) => emptyIndexEntry(key)),
   )
 
   await setMany(resetEntries, idbStore)
 }
 
-export function createPlaylistTrackRelation(
-  playlistId: string,
+export function createTrackTagRelation(
+  tagId: string,
   trackId: string,
-  payload: Omit<PlaylistTracks, 'id' | 'playlistId' | 'trackId'>,
-): PlaylistTracks {
+  payload: Omit<TrackTag, 'id' | 'tagId' | 'trackId'>,
+): TrackTag {
   return {
-    id: relationId(playlistId, trackId),
-    playlistId,
+    id: relationID(tagId, trackId),
+    tagId,
     trackId,
     ...payload,
   }

@@ -1,11 +1,11 @@
 <script lang="ts" setup>
 import type { Track } from '~/shared/storage/types'
-import { PLAYLIST_ID_KEY } from '~/shared/constants/keys'
 import {
-  addTrackToPlaylistQuery,
-  deleteTrackFromPlaylistQuery,
+  addTagToTrackQuery,
+  deleteTagFromTrackQuery,
   deleteTrackQuery,
   downloadTrackQuery,
+  getTrackTagOptionsQuery,
   unloadTrackQuery,
 } from '~/shared/queries'
 
@@ -15,29 +15,27 @@ const { track } = defineProps<{
 
 const open = defineModel<boolean>('open', { default: false })
 
-const playlistId = inject(PLAYLIST_ID_KEY)
+const tagOptions = useIDBWithDeps(
+  () => track.id,
+  (trackID) => getTrackTagOptionsQuery(trackID),
+)
 
-async function handleAddToPlaylists(idList: string[]) {
+async function handleApplyTags(nextTagIDs: string[]) {
+  const assigned = tagOptions.value?.assigned ?? new Set<string>()
+  const next = new Set(nextTagIDs)
+
+  const toAdd = Array.from(next).filter((id) => !assigned.has(id))
+  const toDelete = Array.from(assigned).filter((id) => !next.has(id))
+
   try {
+    await Promise.all(toAdd.map((tagID) => addTagToTrackQuery(tagID, track.id)))
     await Promise.all(
-      idList.map((targetPlaylistId) =>
-        addTrackToPlaylistQuery(targetPlaylistId, track.id),
-      ),
+      toDelete.map((tagID) => deleteTagFromTrackQuery(tagID, track.id)),
     )
+
     open.value = false
   } catch (error) {
-    console.debug('Failed to add track to playlist:', error)
-  }
-}
-
-async function handleRemoveFromPlaylist() {
-  if (!playlistId) return
-
-  try {
-    await deleteTrackFromPlaylistQuery(playlistId, track.id)
-    open.value = false
-  } catch (error) {
-    console.debug('Failed to remove track from playlist:', error)
+    console.debug('Failed to update track tags:', error)
   }
 }
 
@@ -81,26 +79,16 @@ async function handleDeleteTrack() {
           </span>
           <span v-if="track.keepFile" class="text-sm text-muted"> saved </span>
         </div>
-        <PlaylistPicker @confirm="handleAddToPlaylists">
+        <TagPicker :track-id="track.id" @confirm="handleApplyTags">
           <UButton
             leading-icon="i-lucide-book-plus"
             color="neutral"
             variant="ghost"
             size="xl"
           >
-            add to playlist
+            edit tags
           </UButton>
-        </PlaylistPicker>
-        <UButton
-          v-if="playlistId"
-          leading-icon="i-lucide-book-x"
-          color="neutral"
-          variant="ghost"
-          size="xl"
-          @click="handleRemoveFromPlaylist"
-        >
-          remove from playlist
-        </UButton>
+        </TagPicker>
         <UButton
           v-if="track.keepFile"
           leading-icon="i-lucide-delete"
