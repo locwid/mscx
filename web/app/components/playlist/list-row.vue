@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Playlist } from '~/dexie.storage'
+import type { Playlist } from '~/shared/storage/types'
 import Avatar from 'vue-boring-avatars'
 
 defineProps<{

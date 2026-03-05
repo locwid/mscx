@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Playlist } from '~/dexie.storage'
+import type { Playlist } from '~/shared/storage/types'
 import { deletePlaylistQuery } from '~/shared/queries'
 
 defineProps<{

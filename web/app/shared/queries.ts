@@ -1,19 +1,32 @@
 import { nanoid } from 'nanoid'
-import { dexieStorage, type Track } from '~/dexie.storage'
 import { apiGetFile } from './api/actions'
 import { trySyncWithServer } from './api/sync-with-server'
+import {
+  createPlaylistTrackRelation,
+  getPlaylist,
+  listPlaylistTracksByPlaylistId,
+  listPlaylistTracksByTrackId,
+  listPlaylists,
+  listTracks,
+  putPlaylist,
+  putPlaylistTrack,
+  putTracks,
+  updatePlaylist,
+  updatePlaylistTrack,
+  updateTrack,
+} from './storage/idb-storage'
+import { touchStorageRefresh } from './storage/refresh'
+import type { Track } from './storage/types'
 
-function sortTracks(tracks: Track[]) {
-  return tracks.toSorted(
-    (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+function sortByCreatedAt<T extends { createdAt: Date }>(items: T[]) {
+  return [...items].sort(
+    (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
   )
 }
 
-export function getAllTracksQuery() {
-  return dexieStorage.tracks
-    .where('sync')
-    .notEqual('deleted')
-    .sortBy('createdAt', sortTracks)
+export async function getAllTracksQuery() {
+  const tracks = await listTracks()
+  return sortByCreatedAt(tracks.filter((track) => track.sync !== 'deleted'))
 }
 
 export async function addTracksQuery(files: File[]) {
@@ -35,88 +48,88 @@ export async function addTracksQuery(files: File[]) {
       } satisfies Track
     }),
   )
-  await dexieStorage.tracks.bulkAdd(items)
+  await putTracks(items)
+  await touchStorageRefresh()
   trySyncWithServer()
 }
 
 export async function deleteTrackQuery(id: string) {
-  await dexieStorage.transaction(
-    'rw',
-    ['tracks', 'playlistTracks'],
-    async ({ tracks, playlistTracks }) => {
-      await tracks.update(id, {
+  await updateTrack(id, {
+    sync: 'deleted',
+    keepFile: false,
+    file: undefined,
+  })
+
+  const relations = await listPlaylistTracksByTrackId(id)
+  await Promise.all(
+    relations.map((relation) =>
+      updatePlaylistTrack(relation.playlistId, relation.trackId, {
         sync: 'deleted',
-        keepFile: false,
-        file: undefined,
-      })
-      await playlistTracks
-        .where('trackId')
-        .equals(id)
-        .modify((obj) => {
-          obj.sync = 'deleted'
-        })
-    },
+      }),
+    ),
   )
+
+  await touchStorageRefresh()
   trySyncWithServer()
 }
 
 export async function downloadTrackQuery(id: string) {
   const file = await apiGetFile(id)
-  await dexieStorage.tracks.update(id, { file, keepFile: true })
+  await updateTrack(id, { file, keepFile: true })
+  await touchStorageRefresh()
 }
 
 export async function unloadTrackQuery(id: string) {
-  await dexieStorage.tracks.update(id, { file: undefined, keepFile: false })
+  await updateTrack(id, { file: undefined, keepFile: false })
+  await touchStorageRefresh()
 }
 
-export function getAllPlaylistsQuery() {
-  return dexieStorage.playlists
-    .where('sync')
-    .notEqual('deleted')
-    .sortBy('createdAt')
+export async function getAllPlaylistsQuery() {
+  const playlists = await listPlaylists()
+  return sortByCreatedAt(
+    playlists.filter((playlist) => playlist.sync !== 'deleted'),
+  )
 }
 
 export function getPlaylistByIdQuery(id: string) {
-  return dexieStorage.playlists.get(id)
+  return getPlaylist(id)
 }
 
 export async function addPlaylistQuery(name: string) {
-  await dexieStorage.playlists.add({
+  await putPlaylist({
     id: nanoid(),
     name,
     sync: 'created',
     createdAt: new Date(),
   })
+  await touchStorageRefresh()
   trySyncWithServer()
 }
 
 export async function getPlaylistTracksQuery(id: string) {
-  const pairs = await dexieStorage.playlistTracks
-    .where('playlistId')
-    .equals(id)
-    .toArray()
+  const pairs = await listPlaylistTracksByPlaylistId(id)
   const trackIdSet = new Set(pairs.map((p) => p.trackId))
-  return dexieStorage.tracks
-    .where('sync')
-    .notEqual('deleted')
-    .filter((track) => trackIdSet.has(track.id))
-    .sortBy('createdAt', sortTracks)
+  const tracks = await listTracks()
+  return sortByCreatedAt(
+    tracks.filter(
+      (track) => track.sync !== 'deleted' && trackIdSet.has(track.id),
+    ),
+  )
 }
 
 export async function deletePlaylistQuery(id: string) {
-  await dexieStorage.transaction(
-    'rw',
-    ['playlists', 'playlistTracks'],
-    async ({ playlists, playlistTracks }) => {
-      await playlists.update(id, { sync: 'deleted' })
-      await playlistTracks
-        .where('playlistId')
-        .equals(id)
-        .modify((obj) => {
-          obj.sync = 'deleted'
-        })
-    },
+  await updatePlaylist(id, { sync: 'deleted' })
+
+  const relations = await listPlaylistTracksByPlaylistId(id)
+  await Promise.all(
+    relations.map((relation) =>
+      updatePlaylistTrack(relation.playlistId, relation.trackId, {
+        sync: 'deleted',
+      }),
+    ),
   )
+
+  await touchStorageRefresh()
   trySyncWithServer()
 }
 
@@ -124,13 +137,13 @@ export async function addTrackToPlaylistQuery(
   playlistId: string,
   trackId: string,
 ) {
-  await dexieStorage.playlistTracks.add({
-    id: nanoid(),
-    playlistId,
-    trackId,
-    createdAt: new Date(),
-    sync: 'created',
-  })
+  await putPlaylistTrack(
+    createPlaylistTrackRelation(playlistId, trackId, {
+      createdAt: new Date(),
+      sync: 'created',
+    }),
+  )
+  await touchStorageRefresh()
   trySyncWithServer()
 }
 
@@ -138,11 +151,9 @@ export async function deleteTrackFromPlaylistQuery(
   playlistId: string,
   trackId: string,
 ) {
-  await dexieStorage.playlistTracks
-    .where('[playlistId+trackId]')
-    .equals([playlistId, trackId])
-    .modify((obj) => {
-      obj.sync = 'deleted'
-    })
+  await updatePlaylistTrack(playlistId, trackId, {
+    sync: 'deleted',
+  })
+  await touchStorageRefresh()
   trySyncWithServer()
 }

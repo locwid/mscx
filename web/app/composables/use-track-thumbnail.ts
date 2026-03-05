@@ -1,4 +1,4 @@
-import type { Track } from '~/dexie.storage'
+import type { Track } from '~/shared/storage/types'
 
 export function useTrackThumbnail(trackGetter: () => Track | undefined) {
   const track = computed(trackGetter)

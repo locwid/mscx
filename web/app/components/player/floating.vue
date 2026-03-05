@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Track } from '~/dexie.storage'
+import type { Track } from '~/shared/storage/types'
 import Avatar from 'vue-boring-avatars'
 import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { usePlayer } from '~/stores/use-player'

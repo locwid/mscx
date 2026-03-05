@@ -3,7 +3,7 @@ import {
   getPlaylistTracksQuery,
   getPlaylistByIdQuery,
 } from '~/shared/queries'
-import { type Track } from '~/dexie.storage'
+import { type Track } from '~/shared/storage/types'
 
 export const usePlayer = defineStore('player', () => {
   const currentPlaylistId = ref<string | null>(null)
@@ -11,21 +11,12 @@ export const usePlayer = defineStore('player', () => {
   const shuffle = ref(false)
   const shuffleQueue = ref<Track[]>([])
 
-  const tracks = useDexieLiveQueryWithDeps(currentPlaylistId, (id?: string) => {
-    if (id) {
-      return getPlaylistTracksQuery(id)
-    }
-    return getAllTracksQuery()
-  })
+  const tracks = useIDBWithDeps(currentPlaylistId, (id) =>
+    id ? getPlaylistTracksQuery(id) : getAllTracksQuery(),
+  )
 
-  const currentPlaylist = useDexieLiveQueryWithDeps(
-    currentPlaylistId,
-    (id?: string) => {
-      if (id) {
-        return getPlaylistByIdQuery(id)
-      }
-      return undefined
-    },
+  const currentPlaylist = useIDBWithDeps(currentPlaylistId, (id) =>
+    id ? getPlaylistByIdQuery(id) : null,
   )
 
   function generateShuffleQueue() {

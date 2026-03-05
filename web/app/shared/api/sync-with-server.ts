@@ -1,4 +1,3 @@
-import { dexieStorage } from '~/dexie.storage'
 import {
   apiAddTrackToPlaylist,
   apiCreatePlaylist,
@@ -10,11 +9,26 @@ import {
   apiGetTracks,
   apiGetThumbnail,
 } from './actions'
-import { nanoid } from 'nanoid'
+import {
+  clearPlaylists,
+  clearPlaylistTracks,
+  clearTracks,
+  createPlaylistTrackRelation,
+  getTrack,
+  listPlaylistsBySync,
+  listPlaylistTracksBySync,
+  listTracks,
+  listTracksBySync,
+  putPlaylists,
+  putPlaylistTracks,
+  putTracks,
+  updateTrack,
+} from '../storage/idb-storage'
+import { touchStorageRefresh } from '../storage/refresh'
 
 export async function trySyncWithServer() {
   if (navigator.onLine) {
-    syncWithServer()
+    await syncWithServer()
   }
 }
 
@@ -26,10 +40,7 @@ async function syncWithServer() {
 }
 
 async function syncTracks() {
-  const created = await dexieStorage.tracks
-    .where('sync')
-    .equals('created')
-    .toArray()
+  const created = await listTracksBySync('created')
   for (const track of created) {
     if (track.file) {
       await apiCreateTrack({
@@ -44,20 +55,14 @@ async function syncTracks() {
     }
   }
 
-  const deleted = await dexieStorage.tracks
-    .where('sync')
-    .equals('deleted')
-    .toArray()
+  const deleted = await listTracksBySync('deleted')
   for (const track of deleted) {
     await apiDeleteTrack(track.id)
   }
 }
 
 async function syncPlaylists() {
-  const created = await dexieStorage.playlists
-    .where('sync')
-    .equals('created')
-    .toArray()
+  const created = await listPlaylistsBySync('created')
   for (const playlist of created) {
     await apiCreatePlaylist({
       id: playlist.id,
@@ -66,28 +71,19 @@ async function syncPlaylists() {
     })
   }
 
-  const deleted = await dexieStorage.playlists
-    .where('sync')
-    .equals('deleted')
-    .toArray()
+  const deleted = await listPlaylistsBySync('deleted')
   for (const playlist of deleted) {
     await apiDeletePlaylist(playlist.id)
   }
 }
 
 async function syncPlaylistTracks() {
-  const created = await dexieStorage.playlistTracks
-    .where('sync')
-    .equals('created')
-    .toArray()
+  const created = await listPlaylistTracksBySync('created')
   for (const pair of created) {
     await apiAddTrackToPlaylist(pair.playlistId, pair.trackId)
   }
 
-  const deleted = await dexieStorage.playlistTracks
-    .where('sync')
-    .equals('deleted')
-    .toArray()
+  const deleted = await listPlaylistTracksBySync('deleted')
   for (const pair of deleted) {
     await apiDeleteTrackFromPlaylist(pair.playlistId, pair.trackId)
   }
@@ -95,29 +91,28 @@ async function syncPlaylistTracks() {
 
 async function freshTracks() {
   const items = await apiGetTracks()
-  await dexieStorage.transaction('rw', ['tracks'], async ({ tracks }) => {
-    const allPrev = await tracks.toArray()
-    const withFiles = await tracks.filter((obj) => !!obj.keepFile).toArray()
-    await tracks.clear()
-    await tracks.bulkAdd(
-      items.map((track) => {
-        const prev = allPrev.find((item) => item.id === track.id)
-        const prevWithFile = withFiles.find((item) => item.id === track.id)
-        return {
-          id: track.id,
-          name: track.name,
-          keepFile: prevWithFile?.keepFile,
-          file: prevWithFile?.file,
-          thumbnail: prev?.thumbnail,
-          size: track.size,
-          type: track.type,
-          duration: track.duration,
-          sync: 'none',
-          createdAt: new Date(track.createdAt),
-        }
-      }),
-    )
-  })
+  const allPrev = await listTracks()
+  const withFiles = allPrev.filter((track) => !!track.keepFile)
+
+  await clearTracks()
+  await putTracks(
+    items.map((track) => {
+      const prev = allPrev.find((item) => item.id === track.id)
+      const prevWithFile = withFiles.find((item) => item.id === track.id)
+      return {
+        id: track.id,
+        name: track.name,
+        keepFile: prevWithFile?.keepFile,
+        file: prevWithFile?.file,
+        thumbnail: prev?.thumbnail,
+        size: track.size,
+        type: track.type,
+        duration: track.duration,
+        sync: 'none',
+        createdAt: new Date(track.createdAt),
+      }
+    }),
+  )
 
   // Fetch thumbnails for all tracks
   await fetchThumbnails(items.map((t) => t.id))
@@ -128,46 +123,43 @@ async function freshPlaylists() {
   const rels = items.flatMap((item) =>
     item.tracks.map((t) => ({ playlistId: item.id, trackId: t.id })),
   )
-  await dexieStorage.transaction(
-    'rw',
-    ['playlists', 'playlistTracks'],
-    async ({ playlists, playlistTracks }) => {
-      await playlists.clear()
-      await playlistTracks.clear()
-      await playlists.bulkAdd(
-        items.map((playlist) => ({
-          id: playlist.id,
-          name: playlist.name,
-          sync: 'none',
-          createdAt: new Date(playlist.createdAt),
-        })),
-      )
-      await playlistTracks.bulkAdd(
-        rels.map((rel) => ({
-          id: nanoid(),
-          playlistId: rel.playlistId,
-          trackId: rel.trackId,
-          createdAt: new Date(),
-          sync: 'none',
-        })),
-      )
-    },
+  await clearPlaylists()
+  await clearPlaylistTracks()
+
+  await putPlaylists(
+    items.map((playlist) => ({
+      id: playlist.id,
+      name: playlist.name,
+      sync: 'none',
+      createdAt: new Date(playlist.createdAt),
+    })),
+  )
+
+  await putPlaylistTracks(
+    rels.map((rel) =>
+      createPlaylistTrackRelation(rel.playlistId, rel.trackId, {
+        createdAt: new Date(),
+        sync: 'none',
+      }),
+    ),
   )
 }
 
 async function fetchThumbnails(trackIds: string[]) {
   for (const id of trackIds) {
     try {
-      const track = await dexieStorage.tracks.get(id)
+      const track = await getTrack(id)
       // Only fetch if thumbnail doesn't exist
       if (!track?.thumbnail) {
         const blob = await apiGetThumbnail(id)
         if (blob.size > 0) {
-          await dexieStorage.tracks.update(id, { thumbnail: blob })
+          await updateTrack(id, { thumbnail: blob })
         }
       }
     } catch {
       // Silently skip if thumbnail fetch fails for any reason
     }
   }
+
+  await touchStorageRefresh()
 }

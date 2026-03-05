@@ -3,7 +3,7 @@ import { getAllTracksQuery } from '~/shared/queries'
 
 useHeaderTitle('tracks')
 
-const tracks = useDexieLiveQuery(() => getAllTracksQuery())
+const tracks = useIDB(() => getAllTracksQuery())
 </script>
 
 <template>

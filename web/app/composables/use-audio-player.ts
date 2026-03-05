@@ -1,6 +1,6 @@
 import { useMediaControls, useThrottleFn } from '@vueuse/core'
 import { useTrackFile } from '~/composables/use-track-file'
-import type { Track } from '~/dexie.storage'
+import type { Track } from '~/shared/storage/types'
 
 export type AudioPlayerOptions = {
   trackGetter: () => Track | undefined

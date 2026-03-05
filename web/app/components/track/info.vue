@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import type { Track } from '~/dexie.storage'
+import type { Track } from '~/shared/storage/types'
 import {
   addTrackToPlaylistQuery,
   deleteTrackFromPlaylistQuery,

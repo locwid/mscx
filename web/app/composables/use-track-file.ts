@@ -1,5 +1,5 @@
 import { getFileUrlWithAuthKey } from '~/shared/api/actions'
-import type { Track } from '~/dexie.storage'
+import type { Track } from '~/shared/storage/types'
 
 export function useTrackFile(trackGetter: () => Track | undefined) {
   const track = computed(trackGetter)

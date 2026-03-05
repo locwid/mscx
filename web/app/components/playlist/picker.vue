@@ -6,7 +6,7 @@ defineEmits<{
   (e: 'confirm', idList: string[]): void
 }>()
 
-const playlists = useDexieLiveQuery(() => getAllPlaylistsQuery())
+const playlists = useIDB(() => getAllPlaylistsQuery())
 
 const items = computed<CheckboxGroupItem[]>(
   () =>

@@ -1,7 +1,7 @@
 <script lang="ts" setup>
 import { getAllPlaylistsQuery } from '~/shared/queries'
 
-const playlists = useDexieLiveQuery(() => getAllPlaylistsQuery())
+const playlists = useIDB(() => getAllPlaylistsQuery())
 const { currentPlaylistId } = storeToRefs(usePlayer())
 </script>
 
