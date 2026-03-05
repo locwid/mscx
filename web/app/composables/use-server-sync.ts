@@ -1,19 +1,29 @@
-export function useServerSync(fn: () => Promise<void>) {
-  const debouncedSync = useDebounceFn(fn, 1000)
+import {
+  scheduleSyncWithServer,
+  trySyncWithServer,
+} from '~/shared/api/sync-with-server'
 
-  async function trySync(immediate = false) {
-    if (navigator.onLine) {
-      if (immediate) {
-        fn()
-      } else {
-        debouncedSync()
-      }
+export function useServerSync() {
+  function trySync(immediate = false) {
+    if (immediate) {
+      void trySyncWithServer()
+      return
     }
+
+    scheduleSyncWithServer()
   }
 
-  async function setupSync() {
+  function setupSync() {
+    const onOnline = () => {
+      scheduleSyncWithServer()
+    }
+
     trySync(true)
-    window.addEventListener('online', () => trySync())
+    window.addEventListener('online', onOnline)
+
+    return () => {
+      window.removeEventListener('online', onOnline)
+    }
   }
 
   return {

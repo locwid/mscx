@@ -37,10 +37,29 @@ export const usePlayer = defineStore('player', () => {
   }
 
   watch(
-    [tracks, shuffle],
-    () => {
+    shuffle,
+    (isEnabled) => {
+      if (isEnabled) {
+        generateShuffleQueue()
+      } else {
+        shuffleQueue.value = []
+      }
+    },
+    { immediate: true },
+  )
+
+  watch(
+    tracks,
+    (items) => {
       if (shuffle.value) {
         generateShuffleQueue()
+      }
+
+      if (!currentTrackId.value) return
+
+      const hasCurrent = items?.some((item) => item.id === currentTrackId.value)
+      if (!hasCurrent) {
+        currentTrackId.value = items?.[0]?.id ?? null
       }
     },
     { immediate: true },
@@ -85,21 +104,37 @@ export const usePlayer = defineStore('player', () => {
 
   async function start(trackId?: string, playlistId?: string) {
     currentPlaylistId.value = playlistId ?? null
+
     if (trackId) {
       currentTrackId.value = trackId
-    } else {
-      const changed = await until(tracks).changed({ timeout: 500 })
-      if (changed?.length) {
-        if (shuffle.value) {
-          currentTrackId.value = shuffleQueue.value[0]?.id ?? null
-        } else {
-          currentTrackId.value = changed[0]?.id ?? null
-        }
-      } else {
-        currentPlaylistId.value = null
-        currentTrackId.value = null
+      return
+    }
+
+    if (!tracks.value) {
+      try {
+        await until(tracks).toMatch((value) => Array.isArray(value), {
+          timeout: 1500,
+        })
+      } catch {
+        // Keep playlist selected even if loading timed out.
       }
     }
+
+    const availableTracks = tracks.value ?? []
+    if (!availableTracks.length) {
+      currentTrackId.value = null
+      return
+    }
+
+    if (shuffle.value) {
+      if (!shuffleQueue.value.length) {
+        generateShuffleQueue()
+      }
+      currentTrackId.value = shuffleQueue.value[0]?.id ?? null
+      return
+    }
+
+    currentTrackId.value = availableTracks[0]?.id ?? null
   }
 
   async function stop() {

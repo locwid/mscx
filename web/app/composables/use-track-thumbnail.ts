@@ -1,18 +1,26 @@
 import type { Track } from '~/shared/storage/types'
 
 export function useTrackThumbnail(trackGetter: () => Track | undefined) {
-  const track = computed(trackGetter)
+  const track = toRef(trackGetter)
+  const src = ref<string | undefined>()
+  const hasThumbnail = computed(() => !!track.value?.thumbnail)
 
-  const src = computed(() => {
-    if (track.value && track.value.thumbnail) {
-      return URL.createObjectURL(track.value.thumbnail)
-    }
-    return undefined
-  })
+  watch(
+    track,
+    (currentTrack, _prev, onCleanup) => {
+      if (!currentTrack?.thumbnail) {
+        src.value = undefined
+        return
+      }
 
-  const hasThumbnail = computed(() => {
-    return !!(track.value && track.value.thumbnail)
-  })
+      const objectUrl = URL.createObjectURL(currentTrack.thumbnail)
+      src.value = objectUrl
+      onCleanup(() => {
+        URL.revokeObjectURL(objectUrl)
+      })
+    },
+    { immediate: true },
+  )
 
-  return { src, hasThumbnail }
+  return { src: readonly(src), hasThumbnail }
 }

@@ -6,7 +6,7 @@ export const useHealthCheck = () => {
   const checkHealth = async () => {
     try {
       const response = await apiHealth()
-      appStore.health = response
+      appStore.setHealth(response)
     } catch (error) {
       // Silently fail, health check is non-critical
       console.debug('Health check failed:', error)

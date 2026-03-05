@@ -39,12 +39,17 @@ export function useIDBWithDeps<
   })
   let hasValue = false
   let lastData = undefined as D | undefined
+  let queryRunId = 0
 
   async function runQuery() {
     if (!hasValue || lastData === undefined) return
 
+    const runId = ++queryRunId
+
     try {
-      value.value = await querier(lastData)
+      const result = await querier(lastData)
+      if (runId !== queryRunId) return
+      value.value = result
     } catch (error) {
       onError?.(error)
     }
@@ -84,10 +89,15 @@ export function useIDB<T, I = undefined>(
   const refreshToken = useIDBKeyval<number>(STORAGE_REFRESH_KEY, 0, {
     writeDefaults: true,
   })
+  let queryRunId = 0
 
   async function start() {
+    const runId = ++queryRunId
+
     try {
-      value.value = await querier()
+      const result = await querier()
+      if (runId !== queryRunId) return
+      value.value = result
     } catch (error) {
       onError?.(error)
     }

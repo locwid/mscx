@@ -26,10 +26,57 @@ import {
 } from '../storage/idb-storage'
 import { touchStorageRefresh } from '../storage/refresh'
 
-export async function trySyncWithServer() {
-  if (navigator.onLine) {
-    await syncWithServer()
+let activeSync: Promise<void> | null = null
+let pendingSync = false
+let syncTimer: ReturnType<typeof setTimeout> | null = null
+
+function canSyncNow() {
+  return typeof navigator !== 'undefined' && navigator.onLine
+}
+
+export function scheduleSyncWithServer(delayMs = 1000) {
+  if (!canSyncNow()) return
+
+  if (syncTimer) {
+    clearTimeout(syncTimer)
   }
+
+  syncTimer = setTimeout(() => {
+    syncTimer = null
+    void trySyncWithServer()
+  }, delayMs)
+}
+
+export async function trySyncWithServer() {
+  if (!canSyncNow()) return
+
+  if (activeSync) {
+    pendingSync = true
+    return activeSync
+  }
+
+  const appStore = useAppStore()
+
+  activeSync = (async () => {
+    appStore.markSyncStart()
+    try {
+      await syncWithServer()
+      appStore.markSyncSuccess()
+    } catch (error) {
+      appStore.markSyncError(error)
+      throw error
+    } finally {
+      activeSync = null
+      if (pendingSync) {
+        pendingSync = false
+        queueMicrotask(() => {
+          void trySyncWithServer()
+        })
+      }
+    }
+  })()
+
+  return activeSync
 }
 
 async function syncWithServer() {

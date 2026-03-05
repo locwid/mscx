@@ -3,3 +3,5 @@ import type { AudioPlayer } from '~/composables/use-audio-player'
 
 export const AUTH_STORAGE_KEY = 'authKey'
 export const AUDIO_PLAYER_KEY: InjectionKey<AudioPlayer> = Symbol('audioPlayer')
+export const PLAYLIST_ID_KEY: InjectionKey<string | undefined> =
+  Symbol('playlistId')

@@ -2,15 +2,28 @@ import { getFileUrlWithAuthKey } from '~/shared/api/actions'
 import type { Track } from '~/shared/storage/types'
 
 export function useTrackFile(trackGetter: () => Track | undefined) {
-  const track = computed(trackGetter)
+  const track = toRef(trackGetter)
   const { authKey } = storeToRefs(useAuthStore())
+  const src = ref<string | undefined>()
 
-  const src = computed(() => {
-    if (track.value && track.value.file) {
-      return URL.createObjectURL(track.value.file)
-    }
-    return track.value ? getFileUrlWithAuthKey(track.value.id, authKey.value) : undefined
-  })
+  watch(
+    [track, authKey],
+    ([currentTrack, currentAuthKey], _prev, onCleanup) => {
+      if (currentTrack?.file) {
+        const objectUrl = URL.createObjectURL(currentTrack.file)
+        src.value = objectUrl
+        onCleanup(() => {
+          URL.revokeObjectURL(objectUrl)
+        })
+        return
+      }
 
-  return src
+      src.value = currentTrack
+        ? getFileUrlWithAuthKey(currentTrack.id, currentAuthKey)
+        : undefined
+    },
+    { immediate: true },
+  )
+
+  return readonly(src)
 }

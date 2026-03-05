@@ -1,6 +1,6 @@
 import { nanoid } from 'nanoid'
-import { apiGetFile } from './api/actions'
-import { trySyncWithServer } from './api/sync-with-server'
+import { apiGetFile, apiImportYouTube } from './api/actions'
+import { scheduleSyncWithServer } from './api/sync-with-server'
 import {
   createPlaylistTrackRelation,
   getPlaylist,
@@ -18,6 +18,21 @@ import {
 import { touchStorageRefresh } from './storage/refresh'
 import type { Track } from './storage/types'
 
+type AddTrackFailure = {
+  name: string
+  reason: string
+}
+
+type AddTracksResult = {
+  added: number
+  failed: AddTrackFailure[]
+}
+
+async function finalizeLocalMutation() {
+  await touchStorageRefresh()
+  scheduleSyncWithServer()
+}
+
 function sortByCreatedAt<T extends { createdAt: Date }>(items: T[]) {
   return [...items].sort(
     (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
@@ -31,26 +46,59 @@ export async function getAllTracksQuery() {
 
 export async function addTracksQuery(files: File[]) {
   const now = new Date()
-  const items = await Promise.all(
+  const settled = await Promise.allSettled(
     files.map(async (file) => {
       const url = URL.createObjectURL(file)
-      const duration = await getAudioDuration(url)
-      URL.revokeObjectURL(url)
-      return {
-        id: nanoid(),
-        name: file.name,
-        duration: Math.round(duration),
-        size: file.size,
-        type: file.type,
-        file,
-        sync: 'created',
-        createdAt: now,
-      } satisfies Track
+      try {
+        const duration = await getAudioDuration(url)
+        return {
+          id: nanoid(),
+          name: file.name,
+          duration: Math.round(duration),
+          size: file.size,
+          type: file.type,
+          file,
+          sync: 'created',
+          createdAt: now,
+        } satisfies Track
+      } finally {
+        URL.revokeObjectURL(url)
+      }
     }),
   )
-  await putTracks(items)
-  await touchStorageRefresh()
-  trySyncWithServer()
+
+  const items: Track[] = []
+  const failed: AddTrackFailure[] = []
+
+  settled.forEach((item, index) => {
+    if (item.status === 'fulfilled') {
+      items.push(item.value)
+      return
+    }
+
+    failed.push({
+      name: files[index]?.name ?? 'unknown',
+      reason:
+        item.reason instanceof Error
+          ? item.reason.message
+          : 'Failed to read audio metadata',
+    })
+  })
+
+  if (items.length) {
+    await putTracks(items)
+    await finalizeLocalMutation()
+  }
+
+  return {
+    added: items.length,
+    failed,
+  } satisfies AddTracksResult
+}
+
+export async function importYouTubeQuery(url: string) {
+  await apiImportYouTube({ url })
+  await finalizeLocalMutation()
 }
 
 export async function deleteTrackQuery(id: string) {
@@ -69,8 +117,7 @@ export async function deleteTrackQuery(id: string) {
     ),
   )
 
-  await touchStorageRefresh()
-  trySyncWithServer()
+  await finalizeLocalMutation()
 }
 
 export async function downloadTrackQuery(id: string) {
@@ -102,8 +149,7 @@ export async function addPlaylistQuery(name: string) {
     sync: 'created',
     createdAt: new Date(),
   })
-  await touchStorageRefresh()
-  trySyncWithServer()
+  await finalizeLocalMutation()
 }
 
 export async function getPlaylistTracksQuery(id: string) {
@@ -129,8 +175,7 @@ export async function deletePlaylistQuery(id: string) {
     ),
   )
 
-  await touchStorageRefresh()
-  trySyncWithServer()
+  await finalizeLocalMutation()
 }
 
 export async function addTrackToPlaylistQuery(
@@ -143,8 +188,7 @@ export async function addTrackToPlaylistQuery(
       sync: 'created',
     }),
   )
-  await touchStorageRefresh()
-  trySyncWithServer()
+  await finalizeLocalMutation()
 }
 
 export async function deleteTrackFromPlaylistQuery(
@@ -154,6 +198,5 @@ export async function deleteTrackFromPlaylistQuery(
   await updatePlaylistTrack(playlistId, trackId, {
     sync: 'deleted',
   })
-  await touchStorageRefresh()
-  trySyncWithServer()
+  await finalizeLocalMutation()
 }

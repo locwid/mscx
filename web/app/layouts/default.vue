@@ -1,5 +1,4 @@
 <script lang="ts" setup>
-import { trySyncWithServer } from '~/shared/api/sync-with-server'
 import { AUDIO_PLAYER_KEY } from '~/shared/constants/keys'
 import { useAudioPlayer } from '~/composables/use-audio-player'
 import { useHealthCheck } from '~/composables/use-health-check'
@@ -28,16 +27,18 @@ const audioPlayer = useAudioPlayer({
   onPrev: () => player.switchToPreviousTrack(),
 })
 const { checkHealth } = useHealthCheck()
+const { setupSync } = useServerSync()
+let disposeSync: (() => void) | undefined
+
 provide(AUDIO_PLAYER_KEY, audioPlayer)
 
 onBeforeMount(() => {
   checkHealth()
-  trySyncWithServer()
-  window.addEventListener('online', trySyncWithServer)
+  disposeSync = setupSync()
 })
 
 onBeforeUnmount(() => {
-  window.removeEventListener('online', trySyncWithServer)
+  disposeSync?.()
 })
 </script>
 

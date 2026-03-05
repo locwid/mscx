@@ -2,11 +2,20 @@
 import type { Playlist } from '~/shared/storage/types'
 import { deletePlaylistQuery } from '~/shared/queries'
 
-defineProps<{
+const { playlist } = defineProps<{
   playlist: Playlist
 }>()
 
 const open = ref(false)
+
+async function handleDeletePlaylist() {
+  try {
+    await deletePlaylistQuery(playlist.id)
+    open.value = false
+  } catch (error) {
+    console.debug('Failed to delete playlist:', error)
+  }
+}
 </script>
 
 <template>
@@ -18,7 +27,7 @@ const open = ref(false)
           icon="i-lucide-trash"
           variant="ghost"
           color="error"
-          @click="deletePlaylistQuery(playlist.id)"
+          @click="handleDeletePlaylist"
         >
           delete
         </UButton>

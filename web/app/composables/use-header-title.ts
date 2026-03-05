@@ -1,6 +1,6 @@
 export function useHeaderTitle(value: MaybeRefOrGetter<string>) {
   const ref = toRef(value)
-  const { headerTitle } = storeToRefs(useAppStore())
+  const appStore = useAppStore()
 
-  watchImmediate(ref, (v) => (headerTitle.value = v))
+  watchImmediate(ref, (v) => appStore.setHeaderTitle(v))
 }

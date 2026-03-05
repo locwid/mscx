@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import type { Track } from '~/shared/storage/types'
+import { PLAYLIST_ID_KEY } from '~/shared/constants/keys'
 import {
   addTrackToPlaylistQuery,
   deleteTrackFromPlaylistQuery,
@@ -8,13 +9,64 @@ import {
   unloadTrackQuery,
 } from '~/shared/queries'
 
-defineProps<{
+const { track } = defineProps<{
   track: Track
 }>()
 
-const open = ref(false)
+const open = defineModel<boolean>('open', { default: false })
 
-const playlistId = inject<string>('playlistId', '')
+const playlistId = inject(PLAYLIST_ID_KEY)
+
+async function handleAddToPlaylists(idList: string[]) {
+  try {
+    await Promise.all(
+      idList.map((targetPlaylistId) =>
+        addTrackToPlaylistQuery(targetPlaylistId, track.id),
+      ),
+    )
+    open.value = false
+  } catch (error) {
+    console.debug('Failed to add track to playlist:', error)
+  }
+}
+
+async function handleRemoveFromPlaylist() {
+  if (!playlistId) return
+
+  try {
+    await deleteTrackFromPlaylistQuery(playlistId, track.id)
+    open.value = false
+  } catch (error) {
+    console.debug('Failed to remove track from playlist:', error)
+  }
+}
+
+async function handleUnloadTrack() {
+  try {
+    await unloadTrackQuery(track.id)
+    open.value = false
+  } catch (error) {
+    console.debug('Failed to unload track file:', error)
+  }
+}
+
+async function handleDownloadTrack() {
+  try {
+    await downloadTrackQuery(track.id)
+    open.value = false
+  } catch (error) {
+    console.debug('Failed to download track file:', error)
+  }
+}
+
+async function handleDeleteTrack() {
+  try {
+    await deleteTrackQuery(track.id)
+    open.value = false
+  } catch (error) {
+    console.debug('Failed to delete track:', error)
+  }
+}
 </script>
 
 <template>
@@ -29,16 +81,7 @@ const playlistId = inject<string>('playlistId', '')
           </span>
           <span v-if="track.keepFile" class="text-sm text-muted"> saved </span>
         </div>
-        <PlaylistPicker
-          @confirm="
-            (idList) => {
-              idList.forEach((playlistId) =>
-                addTrackToPlaylistQuery(playlistId, track.id),
-              )
-              open = false
-            }
-          "
-        >
+        <PlaylistPicker @confirm="handleAddToPlaylists">
           <UButton
             leading-icon="i-lucide-book-plus"
             color="neutral"
@@ -54,9 +97,7 @@ const playlistId = inject<string>('playlistId', '')
           color="neutral"
           variant="ghost"
           size="xl"
-          @click="
-            (deleteTrackFromPlaylistQuery(playlistId, track.id), (open = false))
-          "
+          @click="handleRemoveFromPlaylist"
         >
           remove from playlist
         </UButton>
@@ -66,7 +107,7 @@ const playlistId = inject<string>('playlistId', '')
           color="neutral"
           variant="ghost"
           size="xl"
-          @click="(unloadTrackQuery(track.id), (open = false))"
+          @click="handleUnloadTrack"
         >
           remove file
         </UButton>
@@ -76,7 +117,7 @@ const playlistId = inject<string>('playlistId', '')
           color="neutral"
           variant="ghost"
           size="xl"
-          @click="(downloadTrackQuery(track.id), (open = false))"
+          @click="handleDownloadTrack"
         >
           save file
         </UButton>
@@ -85,7 +126,7 @@ const playlistId = inject<string>('playlistId', '')
           color="error"
           variant="ghost"
           size="xl"
-          @click="(deleteTrackQuery(track.id), (open = false))"
+          @click="handleDeleteTrack"
         >
           delete
         </UButton>
