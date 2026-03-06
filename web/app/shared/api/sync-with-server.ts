@@ -4,6 +4,7 @@ import {
   apiCreateTrack,
   apiDeleteTag,
   apiDeleteTagFromTrack,
+  apiGetFile,
   apiDeleteTrack,
   apiGetTags,
   apiGetThumbnail,
@@ -29,6 +30,8 @@ import { storageRefreshKeys, touchStorageRefresh } from '../storage/refresh'
 let activeSync: Promise<void> | null = null
 let pendingSync = false
 let syncTimer: ReturnType<typeof setTimeout> | null = null
+let activeAutoDownload: Promise<void> | null = null
+const autoDownloadQueue = new Set<string>()
 
 function canSyncNow() {
   return typeof navigator !== 'undefined' && navigator.onLine
@@ -91,6 +94,8 @@ async function syncWithServer() {
     storageRefreshKeys.tags,
     ...trackIDs.map((trackId) => storageRefreshKeys.trackTagOptions(trackId)),
   ])
+
+  await enqueueAutoDownloadTracks()
 }
 
 async function syncTracks() {
@@ -157,6 +162,7 @@ async function freshTracks() {
         name: track.name,
         keepFile: prevWithFile?.keepFile,
         file: prevWithFile?.file,
+        autoDownloadDisabled: prev?.autoDownloadDisabled,
         thumbnail: prev?.thumbnail,
         size: track.size,
         type: track.type,
@@ -170,6 +176,80 @@ async function freshTracks() {
   await fetchThumbnails(items.map((item) => item.id))
 
   return items.map((item) => item.id)
+}
+
+async function enqueueAutoDownloadTracks() {
+  const appStore = useAppStore()
+  if (!appStore.autoDownloadTracks) {
+    autoDownloadQueue.clear()
+    return
+  }
+
+  const tracks = await listTracks()
+  for (const track of tracks) {
+    if (
+      track.sync !== 'deleted' &&
+      !track.keepFile &&
+      !track.file &&
+      !track.autoDownloadDisabled
+    ) {
+      autoDownloadQueue.add(track.id)
+    }
+  }
+
+  await processAutoDownloadQueue()
+}
+
+async function processAutoDownloadQueue() {
+  if (activeAutoDownload) {
+    return activeAutoDownload
+  }
+
+  activeAutoDownload = (async () => {
+    while (autoDownloadQueue.size && canSyncNow()) {
+      const appStore = useAppStore()
+      if (!appStore.autoDownloadTracks) {
+        autoDownloadQueue.clear()
+        break
+      }
+
+      const [trackId] = autoDownloadQueue
+      if (!trackId) {
+        break
+      }
+
+      autoDownloadQueue.delete(trackId)
+
+      try {
+        const track = await getTrack(trackId)
+        if (
+          !track ||
+          track.sync === 'deleted' ||
+          track.keepFile ||
+          track.file ||
+          track.autoDownloadDisabled
+        ) {
+          continue
+        }
+
+        const file = await apiGetFile(trackId)
+        await updateTrack(trackId, {
+          file,
+          keepFile: true,
+          autoDownloadDisabled: false,
+        })
+        await touchStorageRefresh([storageRefreshKeys.tracks])
+      } catch (error) {
+        console.debug('Failed to auto-download track file:', error)
+      }
+    }
+  })()
+
+  try {
+    await activeAutoDownload
+  } finally {
+    activeAutoDownload = null
+  }
 }
 
 async function freshTags() {

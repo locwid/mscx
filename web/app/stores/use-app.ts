@@ -1,6 +1,11 @@
 import type { HealthResponse } from '~/shared/api/types'
+import { AUTO_DOWNLOAD_TRACKS_STORAGE_KEY } from '~/shared/constants/keys'
 
 export const useAppStore = defineStore('app', () => {
+  const autoDownloadTracks = useLocalStorage(
+    AUTO_DOWNLOAD_TRACKS_STORAGE_KEY,
+    false,
+  )
   const headerTitle = ref('')
   const health = ref<HealthResponse | null>(null)
   const isFullscreenOpen = ref(false)
@@ -41,7 +46,12 @@ export const useAppStore = defineStore('app', () => {
     isFullscreenOpen.value = false
   }
 
+  function setAutoDownloadTracks(value: boolean) {
+    autoDownloadTracks.value = value
+  }
+
   return {
+    autoDownloadTracks,
     headerTitle: readonly(headerTitle),
     health: readonly(health),
     isFullscreenOpen: readonly(isFullscreenOpen),
@@ -55,5 +65,6 @@ export const useAppStore = defineStore('app', () => {
     markSyncError,
     openFullscreen,
     closeFullscreen,
+    setAutoDownloadTracks,
   }
 })

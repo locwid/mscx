@@ -138,12 +138,16 @@ export async function deleteTrackQuery(id: string) {
 
 export async function downloadTrackQuery(id: string) {
   const file = await apiGetFile(id)
-  await updateTrack(id, { file, keepFile: true })
+  await updateTrack(id, { file, keepFile: true, autoDownloadDisabled: false })
   await touchStorageRefresh([storageRefreshKeys.tracks])
 }
 
 export async function unloadTrackQuery(id: string) {
-  await updateTrack(id, { file: undefined, keepFile: false })
+  await updateTrack(id, {
+    file: undefined,
+    keepFile: false,
+    autoDownloadDisabled: true,
+  })
   await touchStorageRefresh([storageRefreshKeys.tracks])
 }
 

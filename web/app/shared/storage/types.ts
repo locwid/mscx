@@ -10,6 +10,7 @@ export interface Track extends BaseEntity {
   name: string
   file?: File
   keepFile?: boolean
+  autoDownloadDisabled?: boolean
   thumbnail?: Blob
   size: number
   duration: number

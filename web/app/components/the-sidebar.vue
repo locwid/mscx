@@ -23,6 +23,7 @@ const navigation: NavigationMenuItem[] = [
 ]
 
 const { authKey } = storeToRefs(useAuthStore())
+const { autoDownloadTracks } = storeToRefs(useAppStore())
 
 const dropAuthKey = () => {
   authKey.value = ''
@@ -43,9 +44,19 @@ const dropAuthKey = () => {
     <slot />
     <template #body>
       <UNavigationMenu orientation="vertical" :items="navigation" />
+      <USeparator class="my-6" />
+      <div class="px-2">
+        <UCheckbox
+          v-model="autoDownloadTracks"
+          label="auto download tracks"
+          description="download all tracks after sync"
+        />
+      </div>
     </template>
     <template #footer>
-      <UColorModeSwitch />
+      <div class="flex items-center gap-3">
+        <UColorModeSwitch />
+      </div>
       <UButton
         color="error"
         size="md"
