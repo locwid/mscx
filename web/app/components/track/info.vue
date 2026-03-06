@@ -8,6 +8,7 @@ import {
   getTrackTagOptionsQuery,
   unloadTrackQuery,
 } from '~/shared/queries'
+import { storageRefreshKeys } from '~/shared/storage/refresh'
 
 const { track } = defineProps<{
   track: Track
@@ -18,6 +19,9 @@ const open = defineModel<boolean>('open', { default: false })
 const tagOptions = useIDBWithDeps(
   () => track.id,
   (trackID) => getTrackTagOptionsQuery(trackID),
+  {
+    refreshKey: storageRefreshKeys.trackTagOptions(track.id),
+  },
 )
 
 async function handleApplyTags(nextTagIDs: string[]) {

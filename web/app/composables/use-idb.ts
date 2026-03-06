@@ -1,18 +1,20 @@
 import { useIDBKeyval } from '@vueuse/integrations/useIDBKeyval'
 import type { ShallowRef, WatchOptions, WatchSource } from 'vue'
 import {
-  STORAGE_REFRESH_KEY,
+  makeStorageRefreshIDBKey,
   subscribeStorageRefresh,
 } from '~/shared/storage/refresh'
 
 type Value<T, I> = I extends undefined ? T | undefined : T | I
 
 type UseIDBWithDepsOptions<I, Immediate> = {
+  refreshKey: string
   onError?: (error: unknown) => void
   initialValue?: I
 } & WatchOptions<Immediate>
 
 type UseIDBOptions<I> = {
+  refreshKey: string
   onError?: (error: unknown) => void
   initialValue?: I
 }
@@ -29,14 +31,18 @@ export function useIDBWithDeps<
 >(
   deps: WatchSource<D> | WatchSource<D>[],
   querier: (data: D) => T | Promise<T>,
-  options: UseIDBWithDepsOptions<I, Immediate> = {},
+  options: UseIDBWithDepsOptions<I, Immediate>,
 ): ShallowRef<Value<T, I>> {
-  const { onError, initialValue, ...rest } = options
+  const { refreshKey, onError, initialValue, ...rest } = options
 
   const value = shallowRef<T | I | undefined>(initialValue)
-  const refreshToken = useIDBKeyval<number>(STORAGE_REFRESH_KEY, 0, {
-    writeDefaults: true,
-  })
+  const refreshToken = useIDBKeyval<number>(
+    makeStorageRefreshIDBKey(refreshKey),
+    0,
+    {
+      writeDefaults: true,
+    },
+  )
   let hasValue = false
   let lastData = undefined as D | undefined
   let queryRunId = 0
@@ -68,9 +74,12 @@ export function useIDBWithDeps<
     void runQuery()
   })
 
-  const stopRefreshSubscription = subscribeStorageRefresh((value) => {
-    void refreshToken.set(value)
-  })
+  const stopRefreshSubscription = subscribeStorageRefresh(
+    refreshKey,
+    (value) => {
+      void refreshToken.set(value)
+    },
+  )
 
   tryOnScopeDispose(() => {
     stopRefreshSubscription()
@@ -81,14 +90,18 @@ export function useIDBWithDeps<
 
 export function useIDB<T, I = undefined>(
   querier: () => T | Promise<T>,
-  options: UseIDBOptions<I> = {},
+  options: UseIDBOptions<I>,
 ): ShallowRef<Value<T, I>> {
-  const { onError, initialValue } = options
+  const { refreshKey, onError, initialValue } = options
 
   const value = shallowRef<T | I | undefined>(initialValue)
-  const refreshToken = useIDBKeyval<number>(STORAGE_REFRESH_KEY, 0, {
-    writeDefaults: true,
-  })
+  const refreshToken = useIDBKeyval<number>(
+    makeStorageRefreshIDBKey(refreshKey),
+    0,
+    {
+      writeDefaults: true,
+    },
+  )
   let queryRunId = 0
 
   async function start() {
@@ -107,9 +120,12 @@ export function useIDB<T, I = undefined>(
     void start()
   })
 
-  const stopRefreshSubscription = subscribeStorageRefresh((value) => {
-    void refreshToken.set(value)
-  })
+  const stopRefreshSubscription = subscribeStorageRefresh(
+    refreshKey,
+    (value) => {
+      void refreshToken.set(value)
+    },
+  )
 
   void start()
 

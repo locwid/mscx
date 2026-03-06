@@ -1,10 +1,13 @@
 <script lang="ts" setup>
 import type { CheckboxGroupItem } from '@nuxt/ui'
 import { getAllTagsQuery } from '~/shared/queries'
+import { storageRefreshKeys } from '~/shared/storage/refresh'
 
 const player = usePlayer()
 const { selectedTagIDs } = storeToRefs(player)
-const tags = useIDB(() => getAllTagsQuery())
+const tags = useIDB(() => getAllTagsQuery(), {
+  refreshKey: storageRefreshKeys.tags,
+})
 const open = ref(false)
 
 const selected = computed({

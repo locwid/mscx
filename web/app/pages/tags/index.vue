@@ -1,9 +1,12 @@
 <script lang="ts" setup>
 import { deleteTagQuery, getAllTagsQuery } from '~/shared/queries'
+import { storageRefreshKeys } from '~/shared/storage/refresh'
 
 useHeaderTitle('tags')
 
-const tags = useIDB(() => getAllTagsQuery())
+const tags = useIDB(() => getAllTagsQuery(), {
+  refreshKey: storageRefreshKeys.tags,
+})
 
 async function handleDeleteTag(tagId: string) {
   await deleteTagQuery(tagId)

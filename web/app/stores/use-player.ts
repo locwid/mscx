@@ -3,6 +3,7 @@ import {
   getAllTagsQuery,
   getTracksByTagIdsQuery,
 } from '~/shared/queries'
+import { storageRefreshKeys } from '~/shared/storage/refresh'
 import { type Track } from '~/shared/storage/types'
 
 export const usePlayer = defineStore('player', () => {
@@ -11,8 +12,13 @@ export const usePlayer = defineStore('player', () => {
   const shuffle = ref(false)
   const shuffleQueue = ref<Track[]>([])
 
-  const tracks = useIDBWithDeps(selectedTagIDs, (tagIDs) =>
-    tagIDs.length ? getTracksByTagIdsQuery(tagIDs) : getAllTracksQuery(),
+  const tracks = useIDBWithDeps(
+    selectedTagIDs,
+    (tagIDs) =>
+      tagIDs.length ? getTracksByTagIdsQuery(tagIDs) : getAllTracksQuery(),
+    {
+      refreshKey: storageRefreshKeys.tracks,
+    },
   )
 
   const selectedTags = useIDBWithDeps(
@@ -23,6 +29,7 @@ export const usePlayer = defineStore('player', () => {
       return tags.filter((tag) => selected.has(tag.id))
     },
     {
+      refreshKey: storageRefreshKeys.tags,
       initialValue: [],
     },
   )

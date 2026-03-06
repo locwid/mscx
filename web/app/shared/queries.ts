@@ -15,7 +15,7 @@ import {
   updateTrack,
   updateTrackTag,
 } from './storage/idb-storage'
-import { touchStorageRefresh } from './storage/refresh'
+import { storageRefreshKeys, touchStorageRefresh } from './storage/refresh'
 import type { Tag, Track } from './storage/types'
 
 type AddTrackFailure = {
@@ -28,8 +28,15 @@ type AddTracksResult = {
   failed: AddTrackFailure[]
 }
 
-async function finalizeLocalMutation() {
-  await touchStorageRefresh()
+async function listAllTrackTagOptionRefreshKeys() {
+  const tracks = await listTracks()
+  return tracks
+    .filter((track) => track.sync !== 'deleted')
+    .map((track) => storageRefreshKeys.trackTagOptions(track.id))
+}
+
+async function finalizeLocalMutation(keys: string[]) {
+  await touchStorageRefresh(keys)
   scheduleSyncWithServer()
 }
 
@@ -93,7 +100,7 @@ export async function addTracksQuery(files: File[]) {
 
   if (items.length) {
     await putTracks(items)
-    await finalizeLocalMutation()
+    await finalizeLocalMutation([storageRefreshKeys.tracks])
   }
 
   return {
@@ -104,7 +111,7 @@ export async function addTracksQuery(files: File[]) {
 
 export async function importYouTubeQuery(url: string) {
   await apiImportYouTube({ url })
-  await finalizeLocalMutation()
+  await finalizeLocalMutation([storageRefreshKeys.tracks])
 }
 
 export async function deleteTrackQuery(id: string) {
@@ -123,18 +130,21 @@ export async function deleteTrackQuery(id: string) {
     ),
   )
 
-  await finalizeLocalMutation()
+  await finalizeLocalMutation([
+    storageRefreshKeys.tracks,
+    storageRefreshKeys.trackTagOptions(id),
+  ])
 }
 
 export async function downloadTrackQuery(id: string) {
   const file = await apiGetFile(id)
   await updateTrack(id, { file, keepFile: true })
-  await touchStorageRefresh()
+  await touchStorageRefresh([storageRefreshKeys.tracks])
 }
 
 export async function unloadTrackQuery(id: string) {
   await updateTrack(id, { file: undefined, keepFile: false })
-  await touchStorageRefresh()
+  await touchStorageRefresh([storageRefreshKeys.tracks])
 }
 
 export async function getAllTagsQuery() {
@@ -154,7 +164,8 @@ export async function addTagQuery(name: string) {
     createdAt: new Date(),
   })
 
-  await finalizeLocalMutation()
+  const trackTagOptionKeys = await listAllTrackTagOptionRefreshKeys()
+  await finalizeLocalMutation([storageRefreshKeys.tags, ...trackTagOptionKeys])
 }
 
 export async function deleteTagQuery(id: string) {
@@ -169,7 +180,12 @@ export async function deleteTagQuery(id: string) {
     ),
   )
 
-  await finalizeLocalMutation()
+  const trackTagOptionKeys = await listAllTrackTagOptionRefreshKeys()
+  await finalizeLocalMutation([
+    storageRefreshKeys.tags,
+    storageRefreshKeys.tracks,
+    ...trackTagOptionKeys,
+  ])
 }
 
 export async function getTrackTagsQuery(trackId: string) {
@@ -240,7 +256,10 @@ export async function addTagToTrackQuery(tagID: string, trackID: string) {
     }),
   )
 
-  await finalizeLocalMutation()
+  await finalizeLocalMutation([
+    storageRefreshKeys.tracks,
+    storageRefreshKeys.trackTagOptions(trackID),
+  ])
 }
 
 export async function deleteTagFromTrackQuery(tagID: string, trackID: string) {
@@ -248,7 +267,10 @@ export async function deleteTagFromTrackQuery(tagID: string, trackID: string) {
     sync: 'deleted',
   })
 
-  await finalizeLocalMutation()
+  await finalizeLocalMutation([
+    storageRefreshKeys.tracks,
+    storageRefreshKeys.trackTagOptions(trackID),
+  ])
 }
 
 export async function getTrackTagOptionsQuery(trackID: string) {

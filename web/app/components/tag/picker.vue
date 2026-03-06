@@ -1,6 +1,7 @@
 <script lang="ts" setup>
 import type { CheckboxGroupItem } from '@nuxt/ui'
 import { getTrackTagOptionsQuery } from '~/shared/queries'
+import { storageRefreshKeys } from '~/shared/storage/refresh'
 
 const { trackId } = defineProps<{
   trackId: string
@@ -13,6 +14,9 @@ defineEmits<{
 const options = useIDBWithDeps(
   () => trackId,
   (id) => getTrackTagOptionsQuery(id),
+  {
+    refreshKey: storageRefreshKeys.trackTagOptions(trackId),
+  },
 )
 
 const items = computed<CheckboxGroupItem[]>(

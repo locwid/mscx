@@ -24,7 +24,7 @@ import {
   putTrackTags,
   updateTrack,
 } from '../storage/idb-storage'
-import { touchStorageRefresh } from '../storage/refresh'
+import { storageRefreshKeys, touchStorageRefresh } from '../storage/refresh'
 
 let activeSync: Promise<void> | null = null
 let pendingSync = false
@@ -83,7 +83,14 @@ async function syncWithServer() {
   await syncTrackTags()
   await syncTracks()
   await syncTags()
-  await Promise.all([freshTracks(), freshTags()])
+
+  const [trackIDs] = await Promise.all([freshTracks(), freshTags()])
+
+  await touchStorageRefresh([
+    storageRefreshKeys.tracks,
+    storageRefreshKeys.tags,
+    ...trackIDs.map((trackId) => storageRefreshKeys.trackTagOptions(trackId)),
+  ])
 }
 
 async function syncTracks() {
@@ -161,6 +168,8 @@ async function freshTracks() {
   )
 
   await fetchThumbnails(items.map((item) => item.id))
+
+  return items.map((item) => item.id)
 }
 
 async function freshTags() {
@@ -205,6 +214,4 @@ async function fetchThumbnails(trackIDs: string[]) {
       // Skip on fetch errors to avoid interrupting full sync.
     }
   }
-
-  await touchStorageRefresh()
 }
