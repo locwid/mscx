@@ -27,7 +27,7 @@ const audioPlayer = useAudioPlayer({
   onPrev: () => player.switchToPreviousTrack(),
 })
 const { checkHealth } = useHealthCheck()
-const { setupSync } = useServerSync()
+const { setupSync, trySync } = useServerSync()
 let disposeSync: (() => void) | undefined
 
 provide(AUDIO_PLAYER_KEY, audioPlayer)
@@ -35,6 +35,7 @@ provide(AUDIO_PLAYER_KEY, audioPlayer)
 onBeforeMount(() => {
   checkHealth()
   disposeSync = setupSync()
+  trySync()
 })
 
 onBeforeUnmount(() => {
