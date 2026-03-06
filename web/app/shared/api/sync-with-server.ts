@@ -13,18 +13,19 @@ import {
 import {
   clearTags,
   clearTrackTags,
-  clearTracks,
   createTrackTagRelation,
+  deleteTrackHard,
   getTrack,
   listTagsBySync,
   listTracks,
   listTracksBySync,
   listTrackTagsBySync,
+  putTrack,
   putTags,
-  putTracks,
   putTrackTags,
   updateTrack,
 } from '../storage/idb-storage'
+import type { Track } from '../storage/types'
 import { storageRefreshKeys, touchStorageRefresh } from '../storage/refresh'
 
 let activeSync: Promise<void> | null = null
@@ -95,7 +96,11 @@ async function syncWithServer() {
     ...trackIDs.map((trackId) => storageRefreshKeys.trackTagOptions(trackId)),
   ])
 
-  await enqueueAutoDownloadTracks()
+  try {
+    await enqueueAutoDownloadTracks()
+  } catch (error) {
+    console.debug('Auto-download queue failed:', error)
+  }
 }
 
 async function syncTracks() {
@@ -149,29 +154,60 @@ async function syncTrackTags() {
 
 async function freshTracks() {
   const items = await apiGetTracks()
-  const allPrev = await listTracks()
-  const withFiles = allPrev.filter((track) => !!track.keepFile)
+  const allPrev = (await listTracks()).filter(
+    (track): track is Track => !!track,
+  )
+  const prevById = new Map(allPrev.map((track) => [track.id, track]))
+  const nextIds = new Set<string>()
 
-  await clearTracks()
-  await putTracks(
-    items.map((track) => {
-      const prev = allPrev.find((item) => item.id === track.id)
-      const prevWithFile = withFiles.find((item) => item.id === track.id)
-      return {
+  for (const track of items) {
+    const nextCreatedAt = new Date(track.createdAt)
+    const prev = prevById.get(track.id)
+
+    nextIds.add(track.id)
+
+    if (!prev) {
+      await putTrack({
         id: track.id,
         name: track.name,
-        keepFile: prevWithFile?.keepFile,
-        file: prevWithFile?.file,
-        autoDownloadDisabled: prev?.autoDownloadDisabled,
-        thumbnail: prev?.thumbnail,
         size: track.size,
         type: track.type,
         duration: track.duration,
         sync: 'none',
-        createdAt: new Date(track.createdAt),
-      }
-    }),
-  )
+        createdAt: nextCreatedAt,
+      })
+      continue
+    }
+
+    const changed =
+      prev.sync !== 'none' ||
+      prev.name !== track.name ||
+      prev.size !== track.size ||
+      prev.type !== track.type ||
+      prev.duration !== track.duration ||
+      prev.createdAt.getTime() !== nextCreatedAt.getTime()
+
+    if (!changed) {
+      continue
+    }
+
+    await updateTrack(track.id, {
+      name: track.name,
+      size: track.size,
+      type: track.type,
+      duration: track.duration,
+      sync: 'none',
+      createdAt: nextCreatedAt,
+    })
+  }
+
+  const staleTrackIds = allPrev
+    .filter((track) => !nextIds.has(track.id))
+    .map((track) => track.id)
+
+  for (const staleTrackId of staleTrackIds) {
+    await deleteTrackHard(staleTrackId)
+  }
 
   await fetchThumbnails(items.map((item) => item.id))
 
@@ -179,13 +215,13 @@ async function freshTracks() {
 }
 
 async function enqueueAutoDownloadTracks() {
-  const appStore = useAppStore()
-  if (!appStore.autoDownloadTracks) {
+  const { autoDownloadTracks } = storeToRefs(useAppStore())
+  if (!autoDownloadTracks.value) {
     autoDownloadQueue.clear()
     return
   }
 
-  const tracks = await listTracks()
+  const tracks = (await listTracks()).filter((track): track is Track => !!track)
   for (const track of tracks) {
     if (
       track.sync !== 'deleted' &&
@@ -207,8 +243,8 @@ async function processAutoDownloadQueue() {
 
   activeAutoDownload = (async () => {
     while (autoDownloadQueue.size && canSyncNow()) {
-      const appStore = useAppStore()
-      if (!appStore.autoDownloadTracks) {
+      const { autoDownloadTracks } = storeToRefs(useAppStore())
+      if (!autoDownloadTracks.value) {
         autoDownloadQueue.clear()
         break
       }

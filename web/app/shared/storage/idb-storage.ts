@@ -1,5 +1,6 @@
 import {
   createStore,
+  del,
   delMany,
   get,
   getMany,
@@ -182,6 +183,19 @@ export async function updateTrack(id: string, patch: Partial<Track>) {
 
   await addToIndex(TRACK_IDS_KEY, id)
   await moveSyncIndex(id, nextSync, prevSync, TRACK_SYNC_INDEX)
+}
+
+export async function deleteTrackHard(id: string) {
+  const prev = await getTrack(id)
+  if (!prev) return
+
+  await del(trackKey(id), idbStore)
+  await removeFromIndex(TRACK_IDS_KEY, id)
+  await Promise.all(
+    Object.values(TRACK_SYNC_INDEX).map((indexKey) =>
+      removeFromIndex(indexKey, id),
+    ),
+  )
 }
 
 export async function clearTracks() {
