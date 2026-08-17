@@ -18,7 +18,9 @@ watch(
   { immediate: true },
 )
 
-const audioPlayer = useAudioPlayer({
+const audioRef = useTemplateRef('audio')
+
+const audioPlayer = useAudioPlayer(audioRef, {
   track: currentTrack,
   thumbnailSrcGetter: () => player.thumbnailSrc,
   hasThumbnailGetter: () => player.hasThumbnail,
@@ -48,9 +50,7 @@ onBeforeUnmount(() => {
     <TheHeader />
     <slot />
     <audio
-      :ref="(el) => (audioPlayer.audioRef.value = el as HTMLAudioElement)"
-      preload="metadata"
-      autoplay
+      ref="audio"
     />
     <Transition name="slide-up">
       <PlayerFloating

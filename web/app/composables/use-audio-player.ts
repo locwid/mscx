@@ -1,4 +1,5 @@
 import { useMediaControls, useThrottleFn } from '@vueuse/core'
+import type { ShallowRef } from 'vue'
 import { useTrackFile } from '~/composables/use-track-file'
 import type { Track } from '~/shared/storage/types'
 
@@ -11,7 +12,7 @@ export type AudioPlayerOptions = {
   onPrev: () => void
 }
 
-export function useAudioPlayer(options: AudioPlayerOptions) {
+export function useAudioPlayer(audioRef: ShallowRef<HTMLAudioElement | null>,options: AudioPlayerOptions) {
   const {
     track,
     thumbnailSrcGetter,
@@ -22,8 +23,6 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
   } = options
 
   const fileSrc = useTrackFile(() => track.value)
-
-  const audioRef = ref<HTMLAudioElement | null>(null)
 
   const { playing, currentTime, duration, ended } = useMediaControls(audioRef, {
     src: computed(() => fileSrc.value || ''),
@@ -118,7 +117,9 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
 
   watch(
     track,
-    () => {
+    async () => {
+      await nextTick()
+      audioRef.value?.play()
       updateMediaSessionMetadata()
       setupMediaSessionHandlers()
     },
