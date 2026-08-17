@@ -3,7 +3,7 @@ import { useTrackFile } from '~/composables/use-track-file'
 import type { Track } from '~/shared/storage/types'
 
 export type AudioPlayerOptions = {
-  trackGetter: () => Track | undefined
+  track: ComputedRef<Track | undefined>
   thumbnailSrcGetter: () => string | undefined
   hasThumbnailGetter: () => boolean
   onEnded: () => void
@@ -13,7 +13,7 @@ export type AudioPlayerOptions = {
 
 export function useAudioPlayer(options: AudioPlayerOptions) {
   const {
-    trackGetter,
+    track,
     thumbnailSrcGetter,
     hasThumbnailGetter,
     onEnded,
@@ -21,7 +21,7 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
     onPrev,
   } = options
 
-  const fileSrc = useTrackFile(() => trackGetter())
+  const fileSrc = useTrackFile(() => track.value)
 
   const audioRef = ref<HTMLAudioElement | null>(null)
 
@@ -40,11 +40,11 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
     mediaSession.setActionHandler('seekbackward', null)
     mediaSession.setActionHandler('seekforward', null)
     mediaSession.setActionHandler('nexttrack', () => {
-      if (!trackGetter()) return
+      if (!track.value) return
       onNext()
     })
     mediaSession.setActionHandler('previoustrack', () => {
-      if (!trackGetter()) return
+      if (!track.value) return
       onPrev()
     })
   }
@@ -59,8 +59,7 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
 
   function updateMediaSessionMetadata() {
     if (!mediaSession || !canSetMetadata) return
-    const track = trackGetter()
-    if (!track) {
+    if (!track.value) {
       mediaSession.metadata = null
       return
     }
@@ -83,7 +82,7 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
     )
 
     mediaSession.metadata = new MediaMetadata({
-      title: track.name,
+      title: track.value.name,
       artist: 'mscx',
       album: 'mscx',
       artwork,
@@ -118,7 +117,7 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
   })
 
   watch(
-    () => trackGetter(),
+    track,
     () => {
       updateMediaSessionMetadata()
       setupMediaSessionHandlers()
@@ -139,7 +138,9 @@ export function useAudioPlayer(options: AudioPlayerOptions) {
     updateMediaSessionPositionState()
   })
 
-  watch(ended, () => {
+  watch(ended, async () => {
+    clearMediaSessionHandlers()
+    await nextTick()
     if (ended.value) onEnded()
   })
 

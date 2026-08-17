@@ -19,7 +19,7 @@ watch(
 )
 
 const audioPlayer = useAudioPlayer({
-  trackGetter: () => currentTrack.value,
+  track: currentTrack,
   thumbnailSrcGetter: () => player.thumbnailSrc,
   hasThumbnailGetter: () => player.hasThumbnail,
   onEnded: () => player.switchToNextTrack(),
