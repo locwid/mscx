@@ -1,19 +1,20 @@
 <script lang="ts" setup>
-import type { TabsItem } from '@nuxt/ui';
+import type { TabsItem } from '@nuxt/ui'
 
 const open = ref(false)
 
 const items = [
   {
     label: 'files',
-    description: 'upload your tracks by manually selecting them from your device',
-    slot: 'files' as const
+    description:
+      'upload your tracks by manually selecting them from your device',
+    slot: 'files' as const,
   },
   {
     label: 'youtube',
     description: 'upload tracks by youtube playlist url',
-    slot: 'youtube' as const
-  }
+    slot: 'youtube' as const,
+  },
 ] satisfies TabsItem[]
 </script>
 

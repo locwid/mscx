@@ -49,9 +49,7 @@ onBeforeUnmount(() => {
   <div class="max-w-lg h-lvh overflow-hidden mx-auto shadow bg-default">
     <TheHeader />
     <slot />
-    <audio
-      ref="audio"
-    />
+    <audio ref="audio" />
     <Transition name="slide-up">
       <PlayerFloating
         v-if="currentTrack && !isFullscreenOpen"

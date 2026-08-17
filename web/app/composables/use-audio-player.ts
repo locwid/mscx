@@ -12,7 +12,10 @@ export type AudioPlayerOptions = {
   onPrev: () => void
 }
 
-export function useAudioPlayer(audioRef: ShallowRef<HTMLAudioElement | null>,options: AudioPlayerOptions) {
+export function useAudioPlayer(
+  audioRef: ShallowRef<HTMLAudioElement | null>,
+  options: AudioPlayerOptions,
+) {
   const {
     track,
     thumbnailSrcGetter,
